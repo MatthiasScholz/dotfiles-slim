@@ -79,7 +79,7 @@
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
-  system.stateVersion = 4;
+  # system.stateVersion = 6;
 
   # TODO Make customized screenshot shortcut declarative
   # - default to clipboard instead to file

@@ -87,6 +87,14 @@
           modules = [
             ./darwin/darwin.nix
 
+            # Add this module to define the primary user for this system
+            {
+              system.primaryUser = "matthias";
+              system.stateVersion = 4; # Ensure this matches your nix-darwin state version
+              # (check /etc/nix-darwin/configuration.nix on your Mac
+              # for an existing stateVersion if you've used it before)
+            }
+
             # FIXME Not working missing OpenSSH enable - Encryption
             #sops-nix.nixosModules.sops
             # FIXME Not working when installing stuff via home-manager - should I? Template flakes are not using home-manager either
@@ -137,6 +145,15 @@
           system = "x86_64-darwin";
           modules = [
             ./darwin/darwin.nix
+
+            # Add this module to define the primary user for this system
+            {
+              system.primaryUser = "mat";
+              system.stateVersion = 6; # Ensure this matches your nix-darwin state version
+              # (check /etc/nix-darwin/configuration.nix on your Mac
+              # for an existing stateVersion if you've used it before)
+            }
+
             home-manager.darwinModules.home-manager
             {
               nixpkgs = nixpkgsConfig;
