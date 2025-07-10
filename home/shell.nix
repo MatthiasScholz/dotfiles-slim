@@ -106,6 +106,7 @@
     # ZSH
     zsh.enable = true;
     # TODO move terraform configuration into the related template flake
+    # FIXME create the cache folder with nix
     # TODO move docker configuration into the related template flake - if possible
     # Configure colima
     zsh.envExtra = ''
