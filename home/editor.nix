@@ -15,6 +15,8 @@
     nodejs
     # FIXME not working: nodePackages_latest."@modelcontextprotocol/server-filesystem"
     uv
+    # LSP for nix compatible wih zed
+    nil
   ];
 
   # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ze/zed-editor/package.nix
