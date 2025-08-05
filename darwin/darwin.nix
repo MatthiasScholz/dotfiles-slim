@@ -16,6 +16,10 @@
     stats
   ];
 
+  # FIXME use the username of the configuration instead of hard-coding
+  # Set the primary user for user-specific configurations
+  system.primaryUser = "matthias";
+
   # Get ollama launched
   # https://www.danielcorin.com/til/nix-darwin/launch-agents/
   # TODO Move to kb.nix or consider connection if os independency should be achieved
@@ -59,6 +63,7 @@
         "nix-command"
         "flakes"
       ];
+      # FIXME this configuration gets ignored since determined installer handles nix configuration
       "trusted-users" = [
         # FIXME make dependent to the user name configuration - do not hard-code
         "matthias"
