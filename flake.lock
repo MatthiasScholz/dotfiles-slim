@@ -94,11 +94,11 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1754372128,
-        "narHash": "sha256-kFhcgksJ/2aGMdsv6IPjoiRhs6GewmyyVH7FxAjV4GI=",
+        "lastModified": 1754412068,
+        "narHash": "sha256-oCevHZdlmwe+0j2I3TVrr0ioQFqLMRE+HpB+oFd0MkI=",
         "owner": "homebrew",
         "repo": "homebrew-cask",
-        "rev": "5dfc439b6a44533d83e36109063df360f7527070",
+        "rev": "e52ff1a5283b6f673b7344a74b12880b84151d5d",
         "type": "github"
       },
       "original": {
@@ -110,11 +110,11 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1754374291,
-        "narHash": "sha256-dxM0sWe8JARmenXT1Nv6K/U7vR8cI8Ui/aaDxam6/+E=",
+        "lastModified": 1754417815,
+        "narHash": "sha256-doP0xFTzfYuSoIS/mcFKc6XiOIcItnjafwfJxEop4ns=",
         "owner": "homebrew",
         "repo": "homebrew-core",
-        "rev": "dbb3e709824cd56d542d2452d2f34756ea704ea1",
+        "rev": "1480a9114ca1a394bccfed8843d384ea23cbd663",
         "type": "github"
       },
       "original": {
@@ -136,22 +136,6 @@
       "original": {
         "owner": "gjbae1212",
         "repo": "homebrew-gossm",
-        "type": "github"
-      }
-    },
-    "homebrew-inkdrop-visualizer": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1716972242,
-        "narHash": "sha256-ay724DDjFJkcLjgm5luzXztICDhonYzTF9/Pwxnd0rE=",
-        "owner": "inkdrop-org",
-        "repo": "homebrew-inkdrop-visualizer",
-        "rev": "4c28136da108460510bc449ac95e5339f277e883",
-        "type": "github"
-      },
-      "original": {
-        "owner": "inkdrop-org",
-        "repo": "homebrew-inkdrop-visualizer",
         "type": "github"
       }
     },
@@ -230,7 +214,6 @@
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
         "homebrew-gossm": "homebrew-gossm",
-        "homebrew-inkdrop-visualizer": "homebrew-inkdrop-visualizer",
         "homebrew-sm": "homebrew-sm",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
