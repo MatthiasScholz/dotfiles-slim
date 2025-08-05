@@ -15,6 +15,7 @@
 
   home.packages = with pkgs; [
     warp-terminal
+    gemini-cli
   ];
 
   # NOTE Not set when a new zsh shell is opened without logout/login as user
