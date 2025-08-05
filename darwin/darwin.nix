@@ -271,10 +271,7 @@
       # TODO move to project specific tools
       #"mattermost"
       # TODO Check if it can be replaced with the nixpkgs
-      "microsoft-teams"
-      # TODO separate personal stuff
-      "orcaslicer"
-      "raspberry-pi-imager"
+      # UNNEEDED "microsoft-teams"
       # System cleanup for manual tools
       # NOTE try using nix capabilities as much as possible
       # "app-cleaner"
@@ -286,6 +283,11 @@
       "icanhazshortcut"
       # Keyboard Configuration Management
       "vial"
+      # TODO separate personal stuff
+      # Thinkering
+      "orcaslicer"
+      "freecad"
+      "raspberry-pi-imager"
     ];
 
     masApps = {
@@ -294,6 +296,9 @@
       "Kindle Classic" = 405399194;
       "Kindle" = 302584613;
       "Meeter" = 1510445899;
+      # FIXME add latest tool:
+      # "System Color Picker" = ???;
+      # "MQTT Explorer" = ???;
     };
   };
 

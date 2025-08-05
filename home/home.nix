@@ -23,6 +23,7 @@
     # project specific
     ./p1.nix
     ./p2.nix
+    ./thinker.nix
   ];
 
   home = {
