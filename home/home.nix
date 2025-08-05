@@ -21,6 +21,7 @@
     ./kb.nix
     ./secretmanagement.nix
     # project specific
+    ./dev.nix
     ./p1.nix
     ./p2.nix
     ./thinker.nix
@@ -32,7 +33,6 @@
     # The home.packages option allows you to install Nix packages into your
     # environment.
     packages = with pkgs; [
-      devenv
       ltex-ls
       marksman
       nixd
