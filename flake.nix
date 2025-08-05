@@ -124,7 +124,7 @@
                 # FIXME use the user name set via darwinConfiguration
                 user = "matthias";
 
-                # TODO check if this is necessary
+                # TODO streamline for all darwin systems
                 taps = {
                   "homebrew/homebrew-core" = homebrew-core;
                   "homebrew/homebrew-cask" = homebrew-cask;
@@ -179,11 +179,12 @@
                 # FIXME use the user name set via darwinConfiguration
                 user = "mat";
 
-                # TODO check if this is necessary
                 taps = {
                   "homebrew/homebrew-core" = homebrew-core;
                   "homebrew/homebrew-cask" = homebrew-cask;
                   "clok/homebrew-sm" = homebrew-sm;
+                  "gjbae1212/homebrew-gossm" = homebrew-gossm;
+                  "fujiwara/homebrew-tap" = homebrew-awslim;
                 };
                 mutableTaps = false;
               };
