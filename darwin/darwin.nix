@@ -101,89 +101,104 @@
     #  enable = true;
     #};
 
-    # https://felixkratz.github.io/SketchyBar/
-    # https://mynixos.com/nix-darwin/options/services.sketchybar
-    sketchybar = {
-      enable = true;
-      # https://mynixos.com/nix-darwin/option/services.sketchybar.config
-      config = ''
-        sketchybar --bar height=24
-        sketchybar --update
-        echo "sketchybar configuration loaded.."
-      '';
-      extraPackages = [
-        pkgs.jq
-        pkgs.lua
-      ];
-    };
-    # Window Manager
-    yabai = {
-      enable = true;
-      config = {
-        layout = "float";
-        mouse_modifier = "ctrl";
-        mouse_action1 = "resize";
-        mouse_drop_action = "stack";
-        window_gap = "20";
-        window_border = "off";
-        window_opacity = "off";
-        window_shadow = "off";
-        # sketchybar awarness
-        # 24: height of sketchybar
-        external_bar = "all:24:0";
+    /*
+      NOTE unused, unconfigured
+      # https://felixkratz.github.io/SketchyBar/
+      # https://mynixos.com/nix-darwin/options/services.sketchybar
+      sketchybar = {
+        enable = true;
+        # https://mynixos.com/nix-darwin/option/services.sketchybar.config
+        config = ''
+          sketchybar --bar height=24
+          sketchybar --update
+          echo "sketchybar configuration loaded.."
+        '';
+        extraPackages = [
+          pkgs.jq
+          pkgs.lua
+        ];
       };
-      extraConfig = ''
-        yabai -m rule --add app='Spotify' display=east
+    */
+    /*
+      yabai = {
+        enable = true;
+        config = {
+          layout = "float";
+        };
+      };
+    */
+    /*
+      NOTE unused, not working as expected
+         TODO be able to create a window static window placement which support macos screens or 3 finger swip
+      # Window Manager
+      yabai = {
+        enable = true;
+        config = {
+          layout = "float";
+          mouse_modifier = "ctrl";
+          mouse_action1 = "resize";
+          mouse_drop_action = "stack";
+          window_gap = "20";
+          window_border = "off";
+          window_opacity = "off";
+          window_shadow = "off";
+          # sketchybar awarness
+          # 24: height of sketchybar
+          external_bar = "all:24:0";
+        };
+        extraConfig = ''
+          yabai -m rule --add app='Spotify' display=east
 
-        yabai -m rule --add app='System Settings' manage=off
+          yabai -m rule --add app='System Settings' manage=off
 
-        # Space positioning
-        yabai -m rule --add app="^Google Calendar" space=1
-        yabai -m rule --add app="^Obsidian" space=3
-        yabai -m rule --add app="^Vivaldi" space=4
-        yabai -m rule --add app="^Emacs" space=5
-        yabai -m rule --add app="^Slack" space=6
-        yabai -m rule --add app="^Microsoft Teams" space=6
-        yabai -m rule --add app="^Google Chat" space=6
-        yabai -m rule --add app="^Zoom" space=6
-        yabai -m rule --add app="^Kindle" space=7
-        yabai -m rule --add app="^Warp" space=7
-        yabai -m rule --add app="^Msty" space=7
-        yabai -m rule --add app="^Activity Monitor" space=7
-        yabai -m rule --add app="^Notion" space=8
-        yabai -m rule --add app="^Beeper" space=9
-      '';
-    };
-    # Keyboard Shortcut Manager
-    skhd = {
-      enable = true;
-      # FIXME use a different path, this is only for testing
-      # FIXME none of the commands are working
-      skhdConfig = ''
-        ctl - k : bash -c "/Users/matthias/projects/config/dotfiles-slim/config/windowswitcher/switch.sh"
+          # Space positioning
+          yabai -m rule --add app="^Google Calendar" space=1
+          yabai -m rule --add app="^Obsidian" space=3
+          yabai -m rule --add app="^Vivaldi" space=4
+          yabai -m rule --add app="^Emacs" space=5
+          yabai -m rule --add app="^Slack" space=6
+          yabai -m rule --add app="^Microsoft Teams" space=6
+          yabai -m rule --add app="^Google Chat" space=6
+          yabai -m rule --add app="^Zoom" space=6
+          yabai -m rule --add app="^Kindle" space=7
+          yabai -m rule --add app="^Warp" space=7
+          yabai -m rule --add app="^Msty" space=7
+          yabai -m rule --add app="^Activity Monitor" space=7
+          yabai -m rule --add app="^Notion" space=8
+          yabai -m rule --add app="^Beeper" space=9
+        '';
+      };
+      # Keyboard Shortcut Manager
+      skhd = {
+        enable = true;
+        # FIXME use a different path, this is only for testing
+        # FIXME none of the commands are working
+        skhdConfig = ''
+          ctl - k : bash -c "/Users/matthias/projects/config/dotfiles-slim/config/windowswitcher/switch.sh"
 
-        # select window
-        alt + cmd - w: yabai -m query --windows \
-        | jq -r '.[] | "\(.app): \(.title)"' \
-        | /opt/homebrew/bin/choose -u -b fabd2f -c 427b58 -s 14 -n 15 -i "$@" <&0 \
-        | yabai -m query --windows \
-        | jq ".[$idx].id" \
-        | xargs yabai -m window --focus
+          # select window
+          alt + cmd - w: yabai -m query --windows \
+          | jq -r '.[] | "\(.app): \(.title)"' \
+          | /opt/homebrew/bin/choose -u -b fabd2f -c 427b58 -s 14 -n 15 -i "$@" <&0 \
+          | yabai -m query --windows \
+          | jq ".[$idx].id" \
+          | xargs yabai -m window --focus
 
-        # cycle between stacked windows
-        alt + cmd - j : yabai -m query --spaces --space \
-        | jq -re ".index" \
-        | xargs -I{} yabai -m query --windows --space {} \
-        | jq -sre 'add | map(select(."is-minimized"==false)) | sort_by(.display, .frame.y, .frame.x, .id) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $has_index > 0 then nth($has_index - 1).id else nth($array_length - 1).id end' \
-        | xargs -I{} yabai -m window --focus {}
+          # cycle between stacked windows
+          alt + cmd - j : yabai -m query --spaces --space \
+          | jq -re ".index" \
+          | xargs -I{} yabai -m query --windows --space {} \
+          | jq -sre 'add | map(select(."is-minimized"==false)) | sort_by(.display, .frame.y, .frame.x, .id) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $has_index > 0 then nth($has_index - 1).id else nth($array_length - 1).id end' \
+          | xargs -I{} yabai -m window --focus {}
 
-        alt + cmd - k : yabai -m query --spaces --space \
-        | jq -re ".index" \
-        | xargs -I{} yabai -m query --windows --space {} \
-        | jq -sre 'add | map(select(."is-minimized"==false)) | sort_by(.display, .frame.y, .frame.x, .id) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $array_length - 1 > $has_index then nth($has_index + 1).id else nth(0).id end' \
-        | xargs -I{} yabai -m window --focus {}
-      '';
-    };
+          alt + cmd - k : yabai -m query --spaces --space \
+          | jq -re ".index" \
+          | xargs -I{} yabai -m query --windows --space {} \
+          | jq -sre 'add | map(select(."is-minimized"==false)) | sort_by(.display, .frame.y, .frame.x, .id) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $array_length - 1 > $has_index then nth($has_index + 1).id else nth(0).id end' \
+          | xargs -I{} yabai -m window --focus {}
+        '';
+      };
+    */
   };
 
   # TODO Understand if there is potential to overwrite - since assignment is used
