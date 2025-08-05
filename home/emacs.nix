@@ -97,6 +97,8 @@
     lldb
     # FIXME debug emacs issue with latest macosx update
     libgccjit
+    # :lang lua
+    lua-language-server
   ];
   # TODO .Doomemacs Installation
 

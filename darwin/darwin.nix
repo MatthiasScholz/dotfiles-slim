@@ -258,6 +258,7 @@
       # TODO Migrate to nixpkgs
       "karabiner-elements"
       "raycast"
+      "hammerspoon"
       # TODO Migrate to nixpkgs
       #"wezterm"
       "vivaldi"
@@ -329,6 +330,10 @@
       # avoid adding a period when pressing space bar two times
       # https://nix-darwin.github.io/nix-darwin/manual/index.html#opt-system.defaults.NSGlobalDomain.NSAutomaticPeriodSubstitutionEnabled
       NSAutomaticPeriodSubstitutionEnabled = false;
+    };
+    # Hammerspoon configuration
+    CustomUserPreferences."org.hammerspoon.Hammerspoon" = {
+      MJConfigFile = "~/.config/hammerspoon/init.lua";
     };
   };
 

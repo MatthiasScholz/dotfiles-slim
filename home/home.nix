@@ -27,6 +27,14 @@
     ./thinker.nix
   ];
 
+  # TODO Understand purpose
+  # https://github.com/evantravers/dotfiles/blob/1d3bcb33707f9a36c6bc6e91767b548f4865501f/users/evantravers/home-manager.nix#L18C1-L21C5
+  xdg.enable = true;
+  # TODO: move this to ./home-manager/modules/darwin or something
+  xdg.configFile."hammerspoon" = lib.mkIf pkgs.stdenv.isDarwin {
+    source = .config/hammerspoon;
+  };
+
   home = {
     stateVersion = "23.11"; # Please read the comment before changing.
 
