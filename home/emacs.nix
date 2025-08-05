@@ -53,10 +53,11 @@
     sqlite
     editorconfig-core-c
     # icons for the themes
-    # TODO understand if all-the-icons is obsolete
+    # TODO emacs: understand if all-the-icons is obsolete
     emacs-all-the-icons-fonts
-    # TODO move font configuration outside, since there are now many
+    # TODO emacs: move font configuration outside, since there are now many
     nerd-fonts.fira-code
+    nerd-fonts.fira-mono
     # to build vterm
     cmake
     libtool # missing alias to glibtool need for vterm compilation
