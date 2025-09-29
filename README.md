@@ -28,6 +28,25 @@ This is to describe the bare-bones development system I use. Supports Intel and 
 
 On OSX: [Determinate Systems Installer](https://github.com/DeterminateSystems/nix-installer).
 
+
+### Upgrades
+
+The nix service itself is not managed by nix-darwin and needs to be upgrade independently (manually?).
+
+``` sh
+sudo determinate-nixd upgrade
+```
+
+### Binary Caches
+
+For `devenv` binary cache support add the cache manually because nix-darwin is not managing the nix installer
+
+```sh
+# /private/etc/nix/nix.custom.conf
+extra-substituters = https://devenv.cachix.org
+extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nixpkgs-python.cachix.org-1:hxjI7pFxTyuTHn2NkvWCrAUcNZLNS3ZAvfYNuYifcEU=
+```
+
 ## Bootstrap
 
 ### Darwin/Linux
@@ -39,6 +58,24 @@ On OSX: [Determinate Systems Installer](https://github.com/DeterminateSystems/ni
 ### Darwin
 
 `rebuild`
+
+### Github Access
+
+In order to avoid rate limiting by the Github API when pulling changes
+a Github Access Token is used. It is stored in `~/.config/nix/nix.conf`
+using `access-token = github.com=<github_personal_access_token_name_nix>`.
+
+### Troubleshoot
+
+#### Extract Installation Path
+
+Use to configure MacOSX permissions.
+
+``` sh
+# Example: getting zoom installation path
+nix eval nixpkgs#zoom-us.outPath --impure
+```
+
 
 ## References
 
