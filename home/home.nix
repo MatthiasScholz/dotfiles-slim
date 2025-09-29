@@ -17,6 +17,7 @@
     ./emacs.nix
     ./editor.nix
     ./music.nix
+    ./graphic.nix
     ./work.nix
     ./kb.nix
     ./secretmanagement.nix
