@@ -28,13 +28,25 @@
     ./tinker.nix
   ];
 
-  # TODO Understand purpose
+  # Create directories in the home folder
   # https://github.com/evantravers/dotfiles/blob/1d3bcb33707f9a36c6bc6e91767b548f4865501f/users/evantravers/home-manager.nix#L18C1-L21C5
   xdg.enable = true;
-  # TODO: move this to ./home-manager/modules/darwin or something
+  # TODO: move this to ./home-manager/modules/darwin or something - this file should be os agnostic
   xdg.configFile."hammerspoon" = lib.mkIf pkgs.stdenv.isDarwin {
+    # TODO streamline configuration to config folder
     source = .config/hammerspoon;
+    # FIXME not working options
+    #target = ".config/hammerspoon";
+    recursive = true;
   };
+  #xdg.configFile."hammerspoon.hyper" = lib.mkIf pkgs.stdenv.isDarwin {
+  #  # TODO streamline configuration to config folder
+  #  source = .config/hammerspoon/Spoons/Hyper.spoon;
+  #  # FIXME not working options
+  #  #target = ".config/hammerspoon";
+  #  #recursive = true;
+  #};
+
 
   home = {
     stateVersion = "23.11"; # Please read the comment before changing.
