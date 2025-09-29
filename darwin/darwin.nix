@@ -60,17 +60,6 @@
 
     # TODO understand if this is still needed with using determine installer
     package = pkgs.nix;
-    settings = {
-      "extra-experimental-features" = [
-        "nix-command"
-        "flakes"
-      ];
-      # FIXME this configuration gets ignored since determined installer handles nix configuration
-      "trusted-users" = [
-        # FIXME make dependent to the user name configuration - do not hard-code
-        "matthias"
-      ];
-    };
   };
 
   # TODO Move to emacs or shell since it is connected to direnv
