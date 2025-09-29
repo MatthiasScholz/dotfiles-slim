@@ -18,6 +18,19 @@
     uv
     # LSP for nix compatible wih zed
     nil
+    # CLI AI Agents
+    # FIXME broken
+    # BROKEN aider-chat-full
+    # BROKEN aider-chat-with-help
+    # WORKS aider-chat
+    # WORKS aider-chat-with-browser
+    # WORKS
+    aider-chat-with-playwright
+    # Focus on aider
+    gemini-cli
+    # .https://github.com/charmbracelet/crush
+    crush
+
   ];
 
   # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ze/zed-editor/package.nix
