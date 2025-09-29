@@ -246,6 +246,7 @@
       "1password"
       "beeper"
       "disk-inventory-x"
+      "google-drive"
       # TODO Migrate to nixpkgs
       "karabiner-elements"
       "raycast"
