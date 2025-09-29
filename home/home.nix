@@ -24,7 +24,7 @@
     ./dev.nix
     ./p1.nix
     ./p2.nix
-    ./thinker.nix
+    ./tinker.nix
   ];
 
   # TODO Understand purpose
