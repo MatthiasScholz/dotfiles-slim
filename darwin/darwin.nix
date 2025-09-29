@@ -9,8 +9,6 @@
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     home-manager
-    # Local LLMs
-    ollama
     # System Status
     # TODO export configuration and add to this repository - including restore
     stats
@@ -20,29 +18,33 @@
   # Set the primary user for user-specific configurations
   system.primaryUser = "matthias";
 
-  # Get ollama launched
-  # https://www.danielcorin.com/til/nix-darwin/launch-agents/
-  # TODO Move to kb.nix or consider connection if os independency should be achieved
-  # Creates a plist file at `~/Library/LaunchAgents``
-  # State: `launchctl blame gui/501/org.nixos.ollama-serve`
-  launchd = {
-    user = {
-      agents = {
-        ollama-serve = {
-          command = "${pkgs.ollama}/bin/ollama serve";
-          serviceConfig = {
-            KeepAlive = true;
-            RunAtLoad = true;
-            StandardOutPath = "/tmp/ollama.out.log";
-            StandardErrorPath = "/tmp/ollama.err.log";
-            EnvironmentVariables = {
-              OLLAMA_ORIGINS = "moz-extension://*,chrome-extension://*,safari-web-extension://*";
+  /*
+    FIXME broken 2025-08-11
+    # Get ollama launched
+    # TODO move to kb.nix
+    # https://www.danielcorin.com/til/nix-darwin/launch-agents/
+    # TODO Move to kb.nix or consider connection if os independency should be achieved
+    # Creates a plist file at `~/Library/LaunchAgents``
+    # State: `launchctl blame gui/501/org.nixos.ollama-serve`
+    launchd = {
+      user = {
+        agents = {
+          ollama-serve = {
+            command = "${pkgs.ollama}/bin/ollama serve";
+            serviceConfig = {
+              KeepAlive = true;
+              RunAtLoad = true;
+              StandardOutPath = "/tmp/ollama.out.log";
+              StandardErrorPath = "/tmp/ollama.err.log";
+              EnvironmentVariables = {
+                OLLAMA_ORIGINS = "moz-extension://*,chrome-extension://*,safari-web-extension://*";
+              };
             };
           };
         };
       };
     };
-  };
+  */
 
   # Use a custom configuration.nix location.
   # TODO keep the default location to support use of `topgrade`

@@ -14,7 +14,8 @@
   # TODO decide on usage
   # git alternative
   programs.jujutsu = {
-    enable = true;
+    # FIXME compilation error
+    enable = false;
   };
 
   # Manage multiple git repositories

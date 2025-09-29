@@ -7,10 +7,8 @@
 }:
 
 let
-  # NOTE obsidian 1.8.9 was broken on mac
-  #       unpacking source archive /nix/store/83ll009y30zh6wrcn2i7351gg9y45wjr-Obsidian-1.8.9.dmg
-  #       error: only HFS file systems are supported.
   # NOTE show how packages can be pinned to a specific nixpkgs version
+  # NOTE obsidian 1.8.9 was broken on mac
   # unstable branch
   pkgs_obsidian_1_8_7 =
     import
@@ -24,13 +22,26 @@ let
         inherit (pkgs) system;
         config.allowUnfree = true;
       };
+  pkgs_ollama_0_11_0 =
+    import
+      (pkgs.fetchFromGitHub {
+        owner = "NixOS";
+        repo = "nixpkgs";
+        rev = "6c5f7adf5360eacb5320b5763d2996400d843880";
+        sha256 = "sha256-FghgCtVQIxc9qB5vZZlblugk6HLnxoT8xanZK+N8qEc=";
+      })
+      {
+        inherit (pkgs) system;
+        config.allowUnfree = true;
+      };
+
 in
 {
   home.packages = [
     pkgs.obsidian
-    #pkgs_obsidian_1_8_7.obsidian
-    # NOTE service execution is os dependent, hence a piece is in darwin.nix
-    pkgs.ollama
+    # NOTE moved to use Gemini in most places
+    # pkgs.ollama
+    # pkgs_ollama_0_11_0
     # Knowledge management via LSP
     # https://oxide.md/Home
     pkgs.markdown-oxide
@@ -48,6 +59,30 @@ in
   # Emacs - Might need to be setup in emacs.nix
   # - zephyr
   #
+
+  /*
+    # FIXME syntax error
+      # Get ollama launched
+      # https://www.danielcorin.com/til/nix-darwin/launch-agents/
+      # NOTE service execution is os dependent
+      # TODO Add support for linux os Consider connection if os independency should be achieved
+      # Creates a plist file at `~/Library/LaunchAgents``
+      # State: `launchctl blame gui/501/org.nixos.ollama-serve`
+      launchd.user.agents = {
+            ollama-serve = {
+              command = "${pkgs.ollama}/bin/ollama serve";
+              serviceConfig = {
+                KeepAlive = true;
+                RunAtLoad = true;
+                StandardOutPath = "/tmp/ollama.out.log";
+                StandardErrorPath = "/tmp/ollama.err.log";
+                EnvironmentVariables = {
+                  OLLAMA_ORIGINS = "moz-extension://*,chrome-extension://*,safari-web-extension://*";
+                };
+              };
+            };
+      };
+  */
 
   # FIXME not working, missing homebrew context
   #homebrew = {
