@@ -7,8 +7,8 @@
 
   programs.git = {
     enable = true;
-
-    lfs.enable = true;
+    # TODO Inject from profile Configuration
+    settings.user.name = "MatthiasScholzTW";
   };
 
   # TODO decide on usage
