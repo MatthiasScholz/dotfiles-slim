@@ -9,6 +9,16 @@
     enable = true;
     # TODO Inject from profile Configuration
     settings.user.name = "MatthiasScholzTW";
+    settings.init.defaultBranch = "main";
+  };
+
+  # Use difftastic as default git diff viewer
+  programs.difftastic = {
+    enable = true;
+    git = {
+      enable = true;
+      diffToolMode = true;
+    };
   };
 
   # TODO decide on usage
