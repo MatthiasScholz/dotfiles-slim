@@ -47,7 +47,6 @@
   #  #recursive = true;
   #};
 
-
   home = {
     stateVersion = "23.11"; # Please read the comment before changing.
 
@@ -57,10 +56,8 @@
       ltex-ls
       marksman
       nixd
-      ripgrep
-      tree
       # Base tooling
-      drawio
+      # UNUSED: drawio
       # Support to switch windows instead of apps
       # NOTE 'alt-tab-macos' not working to show multiple vivaldi windows - one of my use cases
       # TODO not working using brew instead
@@ -80,11 +77,6 @@
     #    recursive = true;
     #  };
     #};
-
-    sessionVariables = {
-      # TODO Set this as part of the emacs.nix
-      EDITOR = "emacs";
-    };
 
     shellAliases = {
       "sys-rebuild" =

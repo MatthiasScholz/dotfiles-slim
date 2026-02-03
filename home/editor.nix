@@ -29,8 +29,19 @@
     # Focus on aider
     gemini-cli
     # .https://github.com/charmbracelet/crush
-    crush
-
+    # NOTE Does not seem to support ACP (2026-01-09)
+    # FIXME broken 2026-01-26
+    # crush
+    # FIXME there is custom files manually created in
+    # TODO incorporate my personal global opencode configuration
+    # ~/.config/opencode/agent/docs-writer.md
+    # from
+    # https://opencode.ai/docs/agents/#examples
+    opencode
+    # Modable Development
+    # TODO unsupported on darwin
+    # https://search.nixos.org/packages?channel=unstable&show=glamoroustoolkit&query=glamoroustoolkit
+    # glamoroustoolkit
   ];
 
   # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ze/zed-editor/package.nix

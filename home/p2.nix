@@ -11,7 +11,7 @@
     # NOTE MS Teams nixpkgs outdated and broken -> use brew
     # teams
     # Slack
-    slack
+    # slack
     # VPN client
   ];
 

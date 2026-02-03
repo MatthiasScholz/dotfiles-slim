@@ -11,10 +11,16 @@
       # HACK Trying to compile vterm for emacs
       glibtool = "libtool";
     };
+
+    sessionVariables = {
+      # TODO Set this as part of the emacs.nix
+      EDITOR = "emacs";
+    };
   };
 
   home.packages = with pkgs; [
     warp-terminal
+    tree
   ];
 
   # NOTE Not set when a new zsh shell is opened without logout/login as user
@@ -48,6 +54,8 @@
     # Smarter 'cd' with 'z'
     zoxide.enable = true;
     dircolors.enable = true;
+
+    ripgrep.enable = true;
 
     # Prompt
     starship = {
