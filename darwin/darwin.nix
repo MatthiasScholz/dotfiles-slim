@@ -291,11 +291,8 @@
       "vivaldi"
       # aws specific tooling - currently unsupported package
       # TODO Migrate to knowledge management: kb.nix
-      # TODO Migrate to engagement specific stuff
-      # TODO how to install the plugins for logseq?
-      #"logseq"
-      "obsidian"
       "notion"
+      # FIXME "calibre"
       # TODO move to project specific tools
       #"mattermost"
       # TODO Check if it can be replaced with the nixpkgs
@@ -306,16 +303,16 @@
       # AI
       # https://msty.app
       # TODO Migrate to knowledge management: kb.nix
-      "msty"
+      # UNUSED "msty"
       # TODO try to get skhd working
       "icanhazshortcut"
       # Keyboard Configuration Management
-      "vial"
+      # UNUSED "vial"
       # TODO separate personal stuff
       # Thinkering
       "orcaslicer"
-      "freecad"
-      "raspberry-pi-imager"
+      # UNUSED "freecad"
+      # FIXME "raspberry-pi-imager"
     ];
 
     masApps = {
