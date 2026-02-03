@@ -39,6 +39,15 @@ in
 {
   home.packages = [
     pkgs.obsidian
+    # Additional packages to support plugins in obsidian
+    # TODO Reconsider since switch to marimo which allows a more direct interaction
+    # https://github.com/d-eniz/jupymd
+    #pkgs.python313
+    #pkgs.python313Packages.notebook
+    #pkgs.python313Packages.jupytext
+    #pkgs.python313Packages.matplotlib
+    #pkgs.python313Packages.jupyterlab
+    #pkgs.python313Packages.ipykernel
     # NOTE moved to use Gemini in most places
     # pkgs.ollama
     # pkgs_ollama_0_11_0
@@ -49,6 +58,9 @@ in
 
     # Render mermaid diagrams, provides mmdc
     pkgs.mermaid-cli
+    # library
+    # NOTE broken for macosx
+    # pkgs.calibre
   ];
 
   # TODO Install some models
