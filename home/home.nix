@@ -66,6 +66,8 @@
       hidden-bar
       # TODO move UI stuff into a separate file
       xbar
+      # Fonts
+      inter
     ];
 
     # Home Manager is pretty good at managing dotfiles. The primary way to manage
