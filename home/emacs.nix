@@ -92,7 +92,8 @@
     # Dired features
     poppler
     # Samba Share Connect Support
-    samba
+    # FIXME broken 2026-02-01
+    # samba
     # Debugger
     lldb
     # FIXME debug emacs issue with latest macosx update
