@@ -87,11 +87,14 @@
     };
 
     shellAliases = {
-      "sys-rebuild" = "sudo darwin-rebuild switch --flake ~/projects/config/dotfiles-slim --refresh";
+      "sys-rebuild" =
+        "sudo darwin-rebuild switch --show-trace --flake ~/projects/config/dotfiles-slim --refresh";
       "sys-rollback" = "darwin-rebuild switch --rollback";
       "sys-update" = "cd ~/projects/config/dotfiles-slim && nix flake update";
       "sys-upgrade" = "sys-update && sys-rebuild";
-      "sys-optimise" = "nix-store --optimise";
+      # NOTE not sure which command will be more convenient, keeping duplication to experience usage pattern
+      "sys-optimise" = "nix store optimise";
+      "sys-cleanup" = "nix store optimise";
     };
 
     # Neo2 Configuration via Karabiner Elements
