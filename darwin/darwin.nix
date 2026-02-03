@@ -18,6 +18,22 @@
   # Set the primary user for user-specific configurations
   system.primaryUser = "matthias";
 
+  # Declaratively create /etc/nix/nix.custom.conf for Determinate Nix
+  # FIXME avoid hard-coding the system.primaryUser
+  environment.etc."nix/nix.custom.conf".text = ''
+    # This configuration is necessary to allow the user to use binary caches
+    # like the one required by devenv (Cachix) without being root.
+    # We include root and for safety and system function.
+    # Used by https://github.com/DeterminateSystems/nix-installer.
+
+    #alternative, less secure
+    #trusted-users = root matthias
+
+    extra-substituters = https://devenv.cachix.org
+    extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nixpkgs-python.cachix.org-1:hxjI7pFxTyuTHn2NkvWCrAUcNZLNS3ZAvfYNuYifcEU=
+  '';
+  # ----------------------------------------------------------------------
+
   /*
     FIXME broken 2025-08-11
     # Get ollama launched
