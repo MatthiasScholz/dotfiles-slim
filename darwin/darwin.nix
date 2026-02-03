@@ -70,7 +70,13 @@
   # Create /etc/zshrc that loads the nix-darwin environment.
   programs = {
     gnupg.agent.enable = true;
-    zsh.enable = true; # default shell on catalina
+    # FIXME nh was not found when trying to innstall
+    # nh = {
+    #   enable = true;
+    #   #clean.enable = true;
+    #   #clean.extraArgs = "--keep-since 4d --keep 3";
+    #   #flake = "/home/matthias/config/dotfiles-slim/"; # sets NH_OS_FLAKE variable for you
+    # };
   };
 
   # Used for backwards compatibility, please read the changelog before changing.
@@ -199,12 +205,25 @@
   # '';
 
   # Storage optimisation
+  # Keeping /nix/store tidy
   # https://nixos.wiki/wiki/Storage_optimization
-  # TODO should be os independent
-  # NOTE disabled because of issue: https://github.com/NixOS/nix/issues/7273
+  # FIXME should be os independent
   nix.extraOptions = ''
-    auto-optimise-store = false
+    auto-optimise-store = true
   '';
+
+  # NOTE not working because of determined-nix usage
+  # - nix.optimise.automatic requires nix.enable
+  # - nix.gc.automatic requires nix.enable
+  # nix.gc = {
+  #   automatic = true;
+  #   dates = "weekly";
+  #   options = "--delete-older-than 14d";
+  # };
+  # nix.optimise = {
+  #   automatic = true;
+  #   dates = [ "weekly" ];
+  # };
 
   homebrew = {
     # NOTE Enabling this option does not install Homebrew, see the Homebrew website for installation instructions.
