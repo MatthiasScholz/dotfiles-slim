@@ -8,6 +8,7 @@
 
 {
   imports = [
+    ./keyboard.nix
     ./shell.nix
     ./wezterm.nix
     # Consider group dev related files, e.g. dev, direnv, git, emacs, editor
@@ -16,6 +17,7 @@
     ./git.nix
     ./emacs.nix
     ./editor.nix
+    ./msg.nix
     ./music.nix
     ./graphic.nix
     ./work.nix
