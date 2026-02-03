@@ -113,6 +113,9 @@
 
     # ZSH
     zsh.enable = true;
+
+    # NOTE 2026-01-03 Updated behavior of configuration file management
+    zsh.dotDir = "${config.xdg.configHome}/zsh";
     # TODO move terraform configuration into the related template flake
     # FIXME create the cache folder with nix
     # TODO move docker configuration into the related template flake - if possible
