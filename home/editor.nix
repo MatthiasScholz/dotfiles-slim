@@ -44,41 +44,58 @@
     # glamoroustoolkit
   ];
 
-  # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ze/zed-editor/package.nix
-  # https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zed-editor.enable
-  programs.zed-editor = {
-    enable = true;
+  # Better opencode management
+  imports = [
+    ../modules/ocx-module.nix
+  ];
 
-    # FIXME using any of these configuration settings make the activate stuck.
-    # extensions = [
-    #   "basher"
-    #   "dockerfile"
-    #   "docker-compose"
-    #   "gemini"
-    #   "golangci-lint"
-    #   "gosum"
-    #   "http"
-    #   "make"
-    #   "mermaid"
-    #   "nix"
-    #   "rainbow-csv"
-    #   "rego"
-    #   "risor"
-    #   "terraform"
-    #   "markdown-oxide"
-    # ];
+  # Enable it globally with a single flag
+  programs.ocx.enable = true;
 
-    #   userSettings = {
-    #     # https://zed.dev/docs/configuring-zed#direnv-integration
-    #     load_direnv = "direct";
-    #     autosave = "on_focus_change";
-
-    #     agent = {
-    #       default_model = {
-    #         provider = "google.ai";
-    #         model = "gemini-2.5-pro-preview-05-06";
-    #       };
-    #     };
-    #   };
+  # Optional: Pre-define your favorite registries globally
+  xdg.configFile."ocx/ocx.jsonc".text = builtins.toJSON {
+    registries = [ "https://registry.kdco.dev" ];
+    telemetry = false;
   };
+
+  /*
+    FIXME not working "No such file or directory" - test_open_paths_action
+    # https://github.com/NixOS/nixpkgs/blob/nixpkgs-unstable/pkgs/by-name/ze/zed-editor/package.nix
+    # https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zed-editor.enable
+    programs.zed-editor = {
+      enable = true;
+
+      # FIXME using any of these configuration settings make the activate stuck.
+      # extensions = [
+      #   "basher"
+      #   "dockerfile"
+      #   "docker-compose"
+      #   "gemini"
+      #   "golangci-lint"
+      #   "gosum"
+      #   "http"
+      #   "make"
+      #   "mermaid"
+      #   "nix"
+      #   "rainbow-csv"
+      #   "rego"
+      #   "risor"
+      #   "terraform"
+      #   "markdown-oxide"
+      # ];
+
+      #   userSettings = {
+      #     # https://zed.dev/docs/configuring-zed#direnv-integration
+      #     load_direnv = "direct";
+      #     autosave = "on_focus_change";
+
+      #     agent = {
+      #       default_model = {
+      #         provider = "google.ai";
+      #         model = "gemini-2.5-pro-preview-05-06";
+      #       };
+      #     };
+      #   };
+    };
+  */
 }
