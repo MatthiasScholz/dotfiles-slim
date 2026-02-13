@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
@@ -14,6 +15,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Implementation will follow in next tasks
+    home.packages = [
+      inputs.git-ai.packages.${pkgs.system}.default
+    ];
+
+    # Optional: ensure it's integrated with zsh if needed
+    # programs.zsh.initExtra = ''
+    #   # any git-ai specific shell setup
+    # '';
   };
 }
