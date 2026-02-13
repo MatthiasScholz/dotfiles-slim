@@ -30,7 +30,7 @@ This track integrates `git-ai` as a configurable module in the system flake.
     - **Step 3:** Configure any necessary shell hooks/aliases (e.g., `programs.zsh.initExtra` or `home.sessionVariables`).
     - **Step 4:** Verify `nix flake check` passes.
 
-- [~] Task: Expose and Enable git-ai module
+- [x] Task: Expose and Enable git-ai module db6cb6e
     - **Goal:** Import the module in `darwin/darwin.nix` (or `home/home.nix`) and enable it for the user.
     - **Files:** `darwin/darwin.nix`, `home/home.nix` (depending on where modules are imported), `flake.nix`.
     - **Step 1:** Add `./modules/git-ai.nix` to `modules` list in `flake.nix` (for `darwinConfigurations`) or `home-manager` users config.
@@ -39,7 +39,7 @@ This track integrates `git-ai` as a configurable module in the system flake.
 
 ## Phase 3: Verification
 
-- [ ] Task: Verify Installation
+- [~] Task: Verify Installation
     - **Goal:** Ensure `git-ai` command is available.
     - **Step 1:** Run `nix run nix-darwin -- switch --flake .` (if safe/desired, or user manual check).
     - **Step 2:** Check `which git-ai`.
