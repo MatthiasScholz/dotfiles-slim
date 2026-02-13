@@ -343,7 +343,14 @@
       # Disable automatically rearrange spaces based on most recent use
       # https://daiderd.com/nix-darwin/manual/index.html#opt-system.defaults.dock.mru-spaces
       mru-spaces = false;
+      appswitcher-all-displays = true;
     };
+
+    # "Displays have separate Spaces"
+    # false = each physical display has a separate space (enables Dock on all screens)
+    # true = one space spans across all physical displays (disables Dock on secondary screens)
+    spaces.spans-displays = false;
+
     finder = {
       AppleShowAllExtensions = true;
       ShowPathbar = true;
