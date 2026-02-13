@@ -130,6 +130,7 @@
                 useGlobalPkgs = true;
                 # NOTE setting to true will create an unrecognized path for binaries for emacs
                 useUserPackages = false;
+                extraSpecialArgs = { inherit inputs; };
                 users.matthias = import ./home/home.nix;
               };
               users.users.matthias.home = "/Users/matthias";

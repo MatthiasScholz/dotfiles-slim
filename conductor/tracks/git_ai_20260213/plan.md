@@ -39,10 +39,10 @@ This track integrates `git-ai` as a configurable module in the system flake.
 
 ## Phase 3: Verification
 
-- [~] Task: Verify Installation
+- [x] Task: Verify Installation 75b9928
     - **Goal:** Ensure `git-ai` command is available.
     - **Step 1:** Run `nix run nix-darwin -- switch --flake .` (if safe/desired, or user manual check).
     - **Step 2:** Check `which git-ai`.
     - **Step 3:** Check `git ai --version`.
 
-- [ ] Task: Conductor - User Manual Verification 'Implementation' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Implementation' (Protocol in workflow.md)
