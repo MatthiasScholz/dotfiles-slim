@@ -55,6 +55,8 @@
 
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
 
+    git-ai.url = "github:git-ai-project/git-ai";
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -72,6 +74,7 @@
       homebrew-sm,
       homebrew-gossm,
       homebrew-awslim,
+      git-ai,
       ...
     }@inputs:
     let
