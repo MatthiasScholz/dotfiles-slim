@@ -20,8 +20,15 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = config.programs.git.enable;
+        message = "git-ai requires programs.git.enable to be true.";
+      }
+    ];
+
     home.packages = [
-      inputs.git-ai.packages.${pkgs.system}.default
+      (lib.hiPrio inputs.git-ai.packages.${pkgs.system}.default)
     ];
 
     home.file.".git-ai/config.json".text = builtins.toJSON {
@@ -32,12 +39,12 @@ in
       shellAliases = {
         git = "git-ai";
       };
-      # initContent = ''
-      #   # Use git completion for git-ai
-      #   if (( $+functions[compdef] )); then
-      #     compdef git-ai=git
-      #   fi
-      # '';
+      initContent = ''
+        # Use git completion for git-ai
+        if (( $+functions[compdef] )); then
+          compdef git-ai=git
+        fi
+      '';
     };
   };
 }

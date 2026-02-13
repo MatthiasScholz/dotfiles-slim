@@ -1,20 +1,22 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   home.file = {
     ".cvsignore".source = ../config/git/.cvsignore;
     ".gitconfig".source = ../config/git/.gitconfig;
   };
 
-  # FIXME git and git-ai conflict since git-ai is a wrapper around git they use the same binary name.
-  # TODO check if git-ai is a wrapper or if it ships the git binary as well
+  # Use git-ai as a wrapper.
+  # We use hiPrio for git-ai and lowPrio for the standard git package
+  # to resolve binary collisions while ensuring the wrapper can call the real git.
   programs.git = {
     enable = true;
+    package = lib.lowPrio pkgs.git;
     # TODO Inject from profile Configuration
     settings.user.name = "MatthiasScholzTW";
     settings.init.defaultBranch = "main";
   };
 
-  modules.git-ai.enable = false;
+  modules.git-ai.enable = true;
 
   # Use difftastic as default git diff viewer
   programs.difftastic = {
