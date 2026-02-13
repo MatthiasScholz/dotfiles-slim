@@ -5,6 +5,8 @@
     ".gitconfig".source = ../config/git/.gitconfig;
   };
 
+  # FIXME git and git-ai conflict since git-ai is a wrapper around git they use the same binary name.
+  # TODO check if git-ai is a wrapper or if it ships the git binary as well
   programs.git = {
     enable = true;
     # TODO Inject from profile Configuration

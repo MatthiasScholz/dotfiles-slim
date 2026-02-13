@@ -20,9 +20,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [
-      inputs.git-ai.packages.${pkgs.system}.default
-    ];
+    programs.git.package = inputs.git-ai.packages.${pkgs.system}.default;
 
     programs.zsh = lib.mkIf cfg.zshIntegration {
       shellAliases = {
