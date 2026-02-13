@@ -11,6 +11,7 @@
     ./keyboard.nix
     ./shell.nix
     ./wezterm.nix
+    ../modules/git-ai.nix
     # Consider group dev related files, e.g. dev, direnv, git, emacs, editor
     ./dev.nix
     ./direnv.nix
