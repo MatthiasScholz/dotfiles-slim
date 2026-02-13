@@ -1,19 +1,18 @@
 hs.loadSpoon('Hyper')
-hs.loadSpoon('HyperModal')
-
+-- unusedd hs.loadSpoon('HyperModal')
 -- TODO configure HyperModal
 
--- bundleID, global, local
-Bindings = {
-  {'com.apple.finder', 'f', nil},
-  {'com.raycast.macos', nil, {'c', 'space', ';'}},
-  {'md.obsidian', 'g', nil},
-}
-
+-- Init Hyper Key
 Hyper = spoon.Hyper
-
 Hyper:bindHotKeys({hyperKey = {{}, 'F19'}})
 
+-- Configure Application Key Bindings
+--  bundleID, global, local
+Bindings = {
+  {'com.apple.finder', 'f', nil},
+  -- not needed {'com.raycast.macos', nil, {'c', 'space', ';'}},
+  {'md.obsidian', 'g', nil},
+}
 hs.fnutils.each(Bindings, function(bindingTable)
   local bundleID, globalBind, localBinds = table.unpack(bindingTable)
   if globalBind then
@@ -26,27 +25,44 @@ hs.fnutils.each(Bindings, function(bindingTable)
   end
 end)
 
--- TODO Understand a capture
-Hyper:bind({}, '.', function()
-  Hyper:exit()
-  hs.shortcuts.run("Capture")
-end)
--- TODO Understand a smart capture
-Hyper:bind({}, ',', function()
-  Hyper:exit()
-  hs.shortcuts.run("Smart Capture")
-end)
+-- Configure Higher Customized Bindings
+-- Obsidian Shortcuts
 Hyper:bind({}, 't', function()
   hs.urlevent.openURL("obsidian://open?vault=tw&file=DASHBOARD")
   Hyper:exit()
 end)
+Hyper:bind({}, 'n', nil, function()
+  hs.urlevent.openURL("obsidian://adv-uri?vault=tw&commandid=quickadd:runQuickAdd")
+end)
 
+-- Jump to ms teams or zoom
+-- UNUSED: Z_count = 0
+Hyper:bind({}, 'z', nil, function()
+  -- start a timer
+  -- if not pressed again then
+  if hs.application.find('us.zoom.xos') then
+    hs.application.launchOrFocusByBundleID('us.zoom.xos')
+  elseif hs.application.find('com.microsoft.teams2') then
+    hs.application.launchOrFocusByBundleID('com.microsoft.teams2')
+    local call = hs.settings.get("call")
+    call:focus()
+  end
+end)
+
+-- Examples to open an url
+Hyper:bind({}, 'p', nil, function()
+  hs.urlevent.openURL("https://gemini.google.com")
+end)
+
+
+-- TODO Check use case
 -- provide the ability to override config per computer
 if (hs.fs.displayName('./localConfig.lua')) then
   require('localConfig')
 end
 
--- Random bindings
+
+-- Helper for Hyper Groups
 local chooseFromGroup = function(choice)
   local name = hs.application.nameForBundleID(choice.bundleID)
 
@@ -59,10 +75,14 @@ local chooseFromGroup = function(choice)
   hs.application.launchOrFocusByBundleID(choice.bundleID)
 end
 
+-- Open selection window for a HyperGroup
+-- Requires using "option" key in combination with the Hyper key
+-- and the defined HyperGroup specific key
 local hyperGroup = function(key, group)
   Hyper:bind({}, key, nil, function()
     hs.application.launchOrFocusByBundleID(hs.settings.get("hyperGroup." .. key))
   end)
+  -- FIXME not compatible with my custom keyboard setup
   Hyper:bind({'option'}, key, nil, function()
     print("Setting options…")
     local choices = {}
@@ -86,76 +106,31 @@ local hyperGroup = function(key, group)
   end)
 end
 
-hyperGroup('k', {
+hyperGroup('b', {
   'com.Vivaldi',
   'com.google.Chrome',
 })
 
-hyperGroup('i', {
+hyperGroup('c', {
+  -- TODO Add Google Chat
   'com.microsoft.teams2',
   -- Slack
-  'com.tinyspeck.slackmacgap',
+  -- UNUSED 'com.tinyspeck.slackmacgap',
   'com.hnc.Discord'
 })
 
--- Jump to google hangout or zoom
-Z_count = 0
-Hyper:bind({}, 'z', nil, function()
-  -- start a timer
-  -- if not pressed again then
-  if hs.application.find('us.zoom.xos') then
-    hs.application.launchOrFocusByBundleID('us.zoom.xos')
-  elseif hs.application.find('com.microsoft.teams2') then
-    hs.application.launchOrFocusByBundleID('com.microsoft.teams2')
-    local call = hs.settings.get("call")
-    call:focus()
-  end
-end)
-
--- NOTE Unused, keep for reference and future ideas
--- -- Jump to figma
--- local designApps = {
---   -- Miro
---   'com.electron.realtimeboard',
---   'com.adobe.LightroomClassicCC7'
--- }
--- Hyper:bind({}, 'v', nil, function()
---   local appFound = hs.fnutils.find(designApps, function(bundleID)
---     return hs.application.find(bundleID)
---   end)
-
---   if appFound then
---     hs.application.launchOrFocusByBundleID(appFound)
---   end
--- end)
-
-Hyper:bind({}, 'n', nil, function()
-  hs.urlevent.openURL("obsidian://adv-uri?vault=tw&commandid=quickadd:runQuickAdd")
-end)
-
-Hyper:bind({}, 'h', nil, function()
-  hs.urlevent.openURL("https://devdocs.io")
-end)
-
-Hyper:bind({"control"}, 'p', nil, function()
-  hs.urlevent.openURL("https://claude.ai")
-end)
-
-Hyper:bind({"shift"}, 'p', nil, function()
-  hs.urlevent.openURL("https://perplexity.ai")
-end)
-
-Hyper:bind({}, 'p', nil, function()
-  hs.urlevent.openURL("https://gemini.google.com")
-end)
-
-Hyper:bind({"alt"}, 'p', nil, function()
-  hs.urlevent.openURL("https://chatgpt.com")
-end)
-
-Hyper:bind({"command"}, 'p', nil, function()
-  hs.urlevent.openURL("https://x.com/i/grok")
-end)
-
 -- TODO Add functionality to open a window chooser modal with filter query
 --      like switch.sh which currently uses yabai and manual configuration of a shortcut
+Hyper:bind({}, 'w', nil, function()
+  local wc = hs.chooser.new(function(choice)
+
+   end)
+
+  -- TODO declare windows variable
+   wc
+     :placeholderText("Open windows")
+     :searchSubText(true)
+     :choices(windows)
+     :show()
+end)
+

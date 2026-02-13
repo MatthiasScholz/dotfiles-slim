@@ -264,8 +264,10 @@
       "gossm"
       # Make vterm work on emacs
       #      https://docs.doomemacs.org/v21.12/modules/term/vterm/
+      # TODO Check if needed
       "libvterm" # doomemacs vterm requirement
       # TODO Migrate to package management once the package is fixed
+      # FIXME Migrate to hammerspoon choose-gui not available on MacPro due to older MacOS
       "choose-gui"
       # TODO move into a template/aws fake - but curently no package
       "awslim"
