@@ -14,7 +14,7 @@
     settings.init.defaultBranch = "main";
   };
 
-  modules.git-ai.enable = true;
+  modules.git-ai.enable = false;
 
   # Use difftastic as default git diff viewer
   programs.difftastic = {

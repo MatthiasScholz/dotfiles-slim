@@ -20,18 +20,24 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs.git.package = inputs.git-ai.packages.${pkgs.system}.default;
+    home.packages = [
+      inputs.git-ai.packages.${pkgs.system}.default
+    ];
+
+    home.file.".git-ai/config.json".text = builtins.toJSON {
+      git_path = "${pkgs.git}/bin/git";
+    };
 
     programs.zsh = lib.mkIf cfg.zshIntegration {
       shellAliases = {
         git = "git-ai";
       };
-      initContent = ''
-        # Use git completion for git-ai
-        if (( $+functions[compdef] )); then
-          compdef git-ai=git
-        fi
-      '';
+      # initContent = ''
+      #   # Use git completion for git-ai
+      #   if (( $+functions[compdef] )); then
+      #     compdef git-ai=git
+      #   fi
+      # '';
     };
   };
 }
