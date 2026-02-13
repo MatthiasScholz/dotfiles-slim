@@ -12,6 +12,11 @@ in
 {
   options.modules.git-ai = {
     enable = lib.mkEnableOption "git-ai integration";
+    zshIntegration = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether to enable Zsh integration (aliases and completions).";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -19,9 +24,16 @@ in
       inputs.git-ai.packages.${pkgs.system}.default
     ];
 
-    # Optional: ensure it's integrated with zsh if needed
-    # programs.zsh.initExtra = ''
-    #   # any git-ai specific shell setup
-    # '';
+    programs.zsh = lib.mkIf cfg.zshIntegration {
+      shellAliases = {
+        git = "git-ai";
+      };
+      initContent = ''
+        # Use git completion for git-ai
+        if (( $+functions[compdef] )); then
+          compdef git-ai=git
+        fi
+      '';
+    };
   };
 }
