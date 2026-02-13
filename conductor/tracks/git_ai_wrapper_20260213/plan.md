@@ -24,3 +24,9 @@
     - Run `which git` and verify it's the wrapper.
     - Run `git ai prompts` to check database access.
     - **Recursion Test**: Run `git version` to ensure it returns the standard git version without looping.
+
+## Phase 4: Activation Fix
+- [x] Task: Fix `home-manager.backupFileExtension` placement in `flake.nix`
+    - Move it from flake outputs to the `home-manager` configuration block in `darwinConfigurations`.
+- [ ] Task: Verify activation
+    - Ensure `make setup` can now proceed by automatically backing up the existing config.

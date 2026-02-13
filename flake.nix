@@ -83,9 +83,6 @@
       };
     in
     {
-      # NOTE configure automatic backup of existing files
-      home-manager.backupFileExtension = "bak";
-
       darwinConfigurations = {
         "Matthiass-MacBook-Pro" = darwin.lib.darwinSystem {
           system = "aarch64-darwin";
@@ -126,6 +123,7 @@
               nixpkgs = nixpkgsConfig;
 
               home-manager = {
+                backupFileExtension = "bak";
                 # FIXME sync with all macosx configurations
                 useGlobalPkgs = true;
                 # NOTE setting to true will create an unrecognized path for binaries for emacs
@@ -181,6 +179,7 @@
               nixpkgs = nixpkgsConfig;
 
               home-manager = {
+                backupFileExtension = "bak";
                 # FIXME sync with all macosx configurations
                 useGlobalPkgs = true;
                 # NOTE setting to true will create an unrecognized path for binaries for emacs
