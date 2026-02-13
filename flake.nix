@@ -53,6 +53,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -85,7 +87,23 @@
         "Matthiass-MacBook-Pro" = darwin.lib.darwinSystem {
           system = "aarch64-darwin";
           modules = [
+            inputs.determinate.darwinModules.default
             ./darwin/darwin.nix
+
+            (
+              { ... }:
+              {
+                # NOTE SEE: https://docs.determinate.systems/guides/nix-darwin/
+                # Enable the Determinate Nix module
+                determinateNix.enable = true;
+
+                # FIXME does not exists
+                # Custom settings written to /etc/nix/nix.custom.conf
+                #customSettings = {
+                #  flake-registry = "/etc/nix/flake-registry.json";
+                #};
+              }
+            )
 
             # Add this module to define the primary user for this system
             {
