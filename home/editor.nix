@@ -6,6 +6,7 @@
     # Focus on Emacs, Cline and Zed
     #code-cursor
     # VS Code for AI coding agent trials
+    # TODO Migrate vscode stuff to different file
     vscode
     #vscode-with-extensions
     # FIXME hash mismatch: vscode-extensions.continue.continue
@@ -25,7 +26,7 @@
     # WORKS aider-chat
     # WORKS aider-chat-with-browser
     # WORKS
-    aider-chat-with-playwright
+    # UNUSED aider-chat-with-playwright
     # Focus on aider
     gemini-cli
     # .https://github.com/charmbracelet/crush

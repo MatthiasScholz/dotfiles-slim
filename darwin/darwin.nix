@@ -316,10 +316,12 @@
     ];
 
     masApps = {
-      "1Password for Safari" = 1569813296;
+      # FIXME failure: "The installation could not be started"
+      # "1Password for Safari" = 1569813296;
       "Bandwidth+" = 490461369;
       "Kindle Classic" = 405399194;
-      "Kindle" = 302584613;
+      # FIXME failure: "The installation could not be started"
+      # "Kindle" = 302584613;
       "Meeter" = 1510445899;
       # FIXME add latest tool:
       # "System Color Picker" = ???;
