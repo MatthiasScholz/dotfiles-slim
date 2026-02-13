@@ -14,14 +14,8 @@ switch:
 setup:
 	sudo nix run nix-darwin -- switch --flake . --refresh
 
-list-generations:
-	nix-env --list-generations
-
 rollback:
-	nix-env --rollback
-
-rollback-nix-darwin:
-	/run/current-system/bin/switch-to-configuration boot
+	/run/current-system/sw/bin/darwin-rebuild switch --rollback
 
 # NOTE it seems nix is not uninstalling brew installed apps, even when done via the flake
 app ?= unset
