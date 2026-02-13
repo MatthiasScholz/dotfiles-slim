@@ -12,7 +12,7 @@ This track integrates `git-ai` as a configurable module in the system flake.
     - **Step 3:** Add basic `config = lib.mkIf cfg.enable { ... };` block.
     - **Step 4:** Verify `nix flake check` passes (module is valid but does nothing yet).
 
-- [~] Task: Add git-ai flake input
+- [x] Task: Add git-ai flake input 6519c06
     - **Goal:** Add `github:git-ai-project/git-ai` to `flake.nix` inputs.
     - **Files:** `flake.nix`
     - **Step 1:** Add input: `git-ai.url = "github:git-ai-project/git-ai";`.
@@ -22,7 +22,7 @@ This track integrates `git-ai` as a configurable module in the system flake.
 
 ## Phase 2: Implementation
 
-- [ ] Task: Implement git-ai module logic
+- [~] Task: Implement git-ai module logic
     - **Goal:** Install `git-ai` package and configure environment when enabled.
     - **Files:** `modules/git-ai.nix`
     - **Step 1:** Import `git-ai` flake input in module (via `specialArgs` or similar mechanism if needed, or by passing it down). *Correction:* Best practice is to pass `inputs` via `specialArgs` in `flake.nix`.
