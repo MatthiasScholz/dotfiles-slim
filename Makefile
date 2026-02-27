@@ -8,6 +8,14 @@ info:
 update:
 	nix flake update
 
+build:
+	darwin-rebuild build --flake .#Matthiass-MacBook-Pro
+
+diff:
+	nix run nixpkgs#nvd -- diff /run/current-system ./result
+
+update-diff: update build diff
+
 switch:
 	sudo nix run nix-darwin -- switch --show-trace --flake ~/projects/config/dotfiles-slim
 
