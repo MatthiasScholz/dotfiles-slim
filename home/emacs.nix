@@ -68,8 +68,7 @@
     # https://docs.doomemacs.org/latest/modules/lang/markdown/
     go-grip
     # :lang nix
-    # nixfmt - package relabeling ongoing (2024-06-24)
-    nixfmt-rfc-style
+    nixfmt
     # :lang sh
     shfmt
     shellcheck
