@@ -1,5 +1,22 @@
 { config, pkgs, ... }:
 
+let
+  # NOTE show how packages can be pinned to a specific nixpkgs version
+  # NOTE obsidian 1.8.9 was broken on mac
+  # unstable branch
+  pkgs_warp-terminal_17 =
+    import
+      (pkgs.fetchFromGitHub {
+        owner = "NixOS";
+        repo = "nixpkgs";
+        rev = "a02b9f5982d1be8ebdaf1fb368c1ddb24793176a";
+        sha256 = "sha256-NWFyaZ4AWTVJzB+xYSkEgvtZ1YewsYe/2UtBTLi8PPg";
+      })
+      {
+        inherit (pkgs) system;
+        config.allowUnfree = true;
+      };
+in
 {
   home = {
     shellAliases = {
@@ -31,9 +48,10 @@
     # };
   };
 
-  home.packages = with pkgs; [
-    warp-terminal
-    tree
+  home.packages = [
+    # FIXME Currently broken because of missing filesystem support warp-terminal
+    pkgs_warp-terminal_17.warp-terminal
+    pkgs.tree
   ];
 
   # NOTE Not set when a new zsh shell is opened without logout/login as user
