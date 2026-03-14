@@ -2,18 +2,20 @@
   description = "Nix System Configuration";
 
   inputs = {
-    # The main nixpkgs instance
+    # The main nixpkgs instance (for M-series Macs)
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
+    # Stable instance
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 
-    # TODO separate homebrew setup and combine with homebrew usage
+    # NOTE Pinned release specifically for the Intel Mac
+    # TODO Once released: nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     # For installing homebrew
-    nix-homebrew = {
-      url = "github:zhaofengli-wip/nix-homebrew";
-    };
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+
     # Homebrew Tap Management
-    # NOTE: https://github.com/zhaofengli/nix-homebrew?tab=readme-ov-file#declarative-taps
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
       flake = false;
@@ -34,6 +36,7 @@
       url = "github:fujiwara/homebrew-tap";
       flake = false;
     };
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,12 +44,8 @@
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
-      # optional, not necessary for the module
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # TODO import the 1Password Shell Plugins Flake
-    # _1password-shell-plugins.url = "github:1Password/shell-plugins";
 
     darwin = {
       url = "github:LnL7/nix-darwin";
@@ -54,16 +53,16 @@
     };
 
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
-
     git-ai.url = "github:git-ai-project/git-ai";
-
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs =
     {
       self,
+      nixpkgs,
       nixpkgs-stable,
+      nixpkgs-26_05, # <-- Inject the pinned input here
       darwin,
       sops-nix,
       flake-utils,
@@ -78,143 +77,109 @@
       ...
     }@inputs:
     let
-      nixpkgsConfig = {
-        config.allowUnfree = true;
-      };
+      lib = nixpkgs.lib;
+
+      # Factory function to generate standard macOS systems
+      # Notice we added `pkgsInput` which defaults to standard `nixpkgs`
+      mkDarwinSystem =
+        {
+          system,
+          stateVersion,
+          primaryUser,
+          otherUsers ? [ ],
+          extraModules ? [ ],
+          pkgsInput ? nixpkgs,
+        }:
+        let
+          allUsers = [ primaryUser ] ++ otherUsers;
+        in
+        darwin.lib.darwinSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [
+            # 1. Force Nix-Darwin to evaluate using the chosen pkgsInput
+            {
+              nixpkgs.pkgs = import pkgsInput {
+                inherit system;
+                config.allowUnfree = true;
+              };
+
+              # Optional but recommended: Pin the flake registry so `nix run nixpkgs#hello`
+              # on the CLI uses the correct pinned version for this specific machine.
+              nix.registry.nixpkgs.flake = pkgsInput;
+            }
+
+            ./darwin/darwin.nix
+
+            {
+              system.stateVersion = stateVersion;
+              system.primaryUser = primaryUser;
+
+              users.users = lib.genAttrs allUsers (user: {
+                home = "/Users/${user}";
+              });
+            }
+
+            home-manager.darwinModules.home-manager
+            {
+              home-manager = {
+                backupFileExtension = "bak";
+                # Because we explicitly defined nixpkgs.pkgs above, Home Manager
+                # will automatically inherit it via useGlobalPkgs!
+                useGlobalPkgs = true;
+                useUserPackages = false;
+                extraSpecialArgs = { inherit inputs; };
+
+                users = lib.genAttrs allUsers (user: import ./home/home.nix);
+              };
+            }
+
+            nix-homebrew.darwinModules.nix-homebrew
+            {
+              nix-homebrew = {
+                enable = true;
+                autoMigrate = true;
+                user = primaryUser;
+
+                taps = {
+                  "homebrew/homebrew-core" = homebrew-core;
+                  "homebrew/homebrew-cask" = homebrew-cask;
+                  "clok/homebrew-sm" = homebrew-sm;
+                  "gjbae1212/homebrew-gossm" = homebrew-gossm;
+                  "fujiwara/homebrew-tap" = homebrew-awslim;
+                };
+                mutableTaps = false;
+              };
+            }
+          ]
+          ++ extraModules;
+        };
     in
     {
       darwinConfigurations = {
-        "Matthiass-MacBook-Pro" = darwin.lib.darwinSystem {
+
+        "Matthiass-MacBook-Pro" = mkDarwinSystem {
           system = "aarch64-darwin";
-          modules = [
+          stateVersion = 4;
+          primaryUser = "matthias";
+          # Omitting pkgsInput means this safely defaults to standard unstable nixpkgs
+          extraModules = [
             inputs.determinate.darwinModules.default
-            ./darwin/darwin.nix
-
-            (
-              { ... }:
-              {
-                # NOTE SEE: https://docs.determinate.systems/guides/nix-darwin/
-                # Enable the Determinate Nix module
-                determinateNix.enable = true;
-
-                # FIXME does not exists
-                # Custom settings written to /etc/nix/nix.custom.conf
-                #customSettings = {
-                #  flake-registry = "/etc/nix/flake-registry.json";
-                #};
-              }
-            )
-
-            # Add this module to define the primary user for this system
             {
-              system.primaryUser = "matthias";
-              system.stateVersion = 4; # Ensure this matches your nix-darwin state version
-              # (check /etc/nix-darwin/configuration.nix on your Mac
-              # for an existing stateVersion if you've used it before)
+              determinateNix.enable = true;
             }
-
-            # FIXME Not working missing OpenSSH enable - Encryption
-            #sops-nix.nixosModules.sops
-            # FIXME Not working when installing stuff via home-manager - should I? Template flakes are not using home-manager either
-            # ./secrets/encryption.nix
-
-            home-manager.darwinModules.home-manager
-            {
-              nixpkgs = nixpkgsConfig;
-
-              home-manager = {
-                backupFileExtension = "bak";
-                # FIXME sync with all macosx configurations
-                useGlobalPkgs = true;
-                # NOTE setting to true will create an unrecognized path for binaries for emacs
-                useUserPackages = false;
-                extraSpecialArgs = { inherit inputs; };
-                users.matthias = import ./home/home.nix;
-              };
-              users.users.matthias.home = "/Users/matthias";
-            }
-
-            # FIXME move inside ./darwin/darwin.nix file if possible - keep the flake short
-            # TODO Do this for all MacOSX systems NOT only this single one
-            nix-homebrew.darwinModules.nix-homebrew
-            {
-              nix-homebrew = {
-                enable = true;
-                autoMigrate = true;
-                # FIXME use the user name set via darwinConfiguration
-                user = "matthias";
-
-                # TODO streamline for all darwin systems
-                taps = {
-                  "homebrew/homebrew-core" = homebrew-core;
-                  "homebrew/homebrew-cask" = homebrew-cask;
-                  "clok/homebrew-sm" = homebrew-sm;
-                  "gjbae1212/homebrew-gossm" = homebrew-gossm;
-                  "fujiwara/homebrew-tap" = homebrew-awslim;
-                };
-                mutableTaps = false;
-              };
-            }
-
           ];
-          specialArgs = {
-            inherit inputs;
-          };
         };
-        "MacPro" = darwin.lib.darwinSystem {
+
+        "MacPro" = mkDarwinSystem {
           system = "x86_64-darwin";
-          modules = [
-            ./darwin/darwin.nix
-
-            # Add this module to define the primary user for this system
-            {
-              system.primaryUser = "mat";
-              system.stateVersion = 6; # Ensure this matches your nix-darwin state version
-              # (check /etc/nix-darwin/configuration.nix on your Mac
-              # for an existing stateVersion if you've used it before)
-            }
-
-            home-manager.darwinModules.home-manager
-            {
-              nixpkgs = nixpkgsConfig;
-
-              home-manager = {
-                backupFileExtension = "bak";
-                # FIXME sync with all macosx configurations
-                useGlobalPkgs = true;
-                # NOTE setting to true will create an unrecognized path for binaries for emacs
-                useUserPackages = false;
-
-                users.mat = import ./home/home.nix;
-              };
-              users.users.mat.home = "/Users/mat";
-            }
-
-            # FIXME move inside ./darwin/darwin.nix file if possible - keep the flake short
-            # TODO Do this for all MacOSX systems NOT only this single one
-            nix-homebrew.darwinModules.nix-homebrew
-            {
-              nix-homebrew = {
-                enable = true;
-                autoMigrate = true;
-                # FIXME use the user name set via darwinConfiguration
-                user = "mat";
-
-                taps = {
-                  "homebrew/homebrew-core" = homebrew-core;
-                  "homebrew/homebrew-cask" = homebrew-cask;
-                  "clok/homebrew-sm" = homebrew-sm;
-                  "gjbae1212/homebrew-gossm" = homebrew-gossm;
-                  "fujiwara/homebrew-tap" = homebrew-awslim;
-                };
-                mutableTaps = false;
-              };
-            }
-          ];
-          specialArgs = {
-            inherit inputs;
-          };
+          stateVersion = 6;
+          primaryUser = "mat";
+          otherUsers = [ "pia" ];
+          # Explicitly pin this machine to 26.05 to prevent Intel deprecation breakage
+          pkgsInput = nixpkgs-26_05;
         };
+
       };
     };
 }
