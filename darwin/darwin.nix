@@ -14,10 +14,6 @@
     stats
   ];
 
-  # FIXME use the username of the configuration instead of hard-coding
-  # Set the primary user for user-specific configurations
-  system.primaryUser = "matthias";
-
   # Declaratively create /etc/nix/nix.custom.conf for Determinate Nix
   # FIXME avoid hard-coding the system.primaryUser
   environment.etc."nix/nix.custom.conf".text = ''
