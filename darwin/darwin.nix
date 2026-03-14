@@ -101,7 +101,7 @@
 
   fonts.packages = [
     pkgs.atkinson-hyperlegible
-    pkgs.jetbrains-mono
+    # FIXME BROKEN since 2026-02-27 pkgs.jetbrains-mono
   ];
 
   services = {
