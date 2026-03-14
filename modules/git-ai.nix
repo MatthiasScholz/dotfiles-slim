@@ -28,7 +28,7 @@ in
     ];
 
     home.packages = [
-      (lib.hiPrio inputs.git-ai.packages.${pkgs.system}.default)
+      (lib.hiPrio inputs.git-ai.packages.${pkgs.stdenv.hostPlatform.system}.default)
     ];
 
     home.file.".git-ai/config.json".text = builtins.toJSON {
