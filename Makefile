@@ -13,6 +13,7 @@ update:
 profile ?= .#Matthiass-MacBook-Pro
 build:
 	nix run nix-darwin -- build --flake $(profile)
+	make diff
 
 diff:
 	nix run nixpkgs#nvd -- diff /run/current-system ./result
