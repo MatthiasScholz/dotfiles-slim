@@ -8,20 +8,6 @@
 
 let
   # NOTE show how packages can be pinned to a specific nixpkgs version
-  # NOTE obsidian 1.8.9 was broken on mac
-  # unstable branch
-  pkgs_obsidian_1_8_7 =
-    import
-      (pkgs.fetchFromGitHub {
-        owner = "NixOS";
-        repo = "nixpkgs";
-        rev = "31b5f3ba6361adde901c0c83b02f13212ccdc01f";
-        sha256 = "iR9wRkor7/lKycBZ/w1rJWanV/Wd8bcIQALOl7jJmoM=";
-      })
-      {
-        inherit (pkgs) system;
-        config.allowUnfree = true;
-      };
   pkgs_ollama_0_11_0 =
     import
       (pkgs.fetchFromGitHub {
@@ -37,8 +23,61 @@ let
 
 in
 {
+  # Options: https://github.com/nix-community/home-manager/blob/master/modules/programs/obsidian.nix
+  programs.obsidian = {
+    enable = true;
+    cli.enable = true;
+
+    # TODO configure theme
+
+    defaultSettings = {
+      corePlugins = [
+        "backlink"
+        "bases"
+        "bookmarks"
+        "canvas"
+        "command-palette"
+        "daily-notes"
+        "editor-status"
+        "file-explorer"
+        "file-recovery"
+        "global-search"
+        "graph"
+        "note-composer"
+        "outgoing-link"
+        "outline"
+        "page-preview"
+        "properties"
+        "slash-command"
+        "switcher"
+        "tag-pane"
+        "templates"
+        "word-count"
+        "zk-prefixer"
+      ];
+      # TODO extract the data.json for the plugins I have configured, e.g. image converter, BRAT, Agent Client
+      communityPlugins = [
+        "Excalidraw"
+        "Auto Link Title"
+        "Calendar"
+        "Callout Manager"
+        "Git"
+        "Hider"
+        "Iconize"
+        "Image Converter"
+        "Maps"
+        "Minimal Theme Settings"
+        "Natural Language Dates"
+        "Recent Files"
+        "Style Settings"
+        "Tasks"
+        "BRAT"
+        "Agent Client" # BRAT
+      ];
+    };
+  };
+
   home.packages = [
-    pkgs.obsidian
     # Additional packages to support plugins in obsidian
     # TODO Reconsider since switch to marimo which allows a more direct interaction
     # https://github.com/d-eniz/jupymd
