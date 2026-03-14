@@ -8,8 +8,11 @@ info:
 update:
 	nix flake update
 
+
+# Name of the profile take from flake.nix
+profile ?= .#Matthiass-MacBook-Pro
 build:
-	darwin-rebuild build --flake .#Matthiass-MacBook-Pro
+	nix run nix-darwin -- build --flake $(profile)
 
 diff:
 	nix run nixpkgs#nvd -- diff /run/current-system ./result
