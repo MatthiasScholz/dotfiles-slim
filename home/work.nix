@@ -6,6 +6,8 @@
 }:
 
 {
+  modules.gws.enable = true;
+
   home.packages = with pkgs; [
     zoom-us
   ];
