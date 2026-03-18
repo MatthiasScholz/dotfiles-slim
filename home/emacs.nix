@@ -99,6 +99,8 @@
     libgccjit
     # :lang lua
     lua-language-server
+    # emacs fallback font
+    symbola
   ];
   # TODO .Doomemacs Installation
 
