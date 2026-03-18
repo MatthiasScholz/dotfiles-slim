@@ -54,6 +54,12 @@
 
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
     git-ai.url = "github:git-ai-project/git-ai";
+
+    gws-cli = {
+      url = "github:googleworkspace/cli";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -74,6 +80,7 @@
       homebrew-gossm,
       homebrew-awslim,
       git-ai,
+      gws-cli,
       ...
     }@inputs:
     let

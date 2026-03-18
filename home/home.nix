@@ -12,6 +12,7 @@
     ./shell.nix
     ./wezterm.nix
     ../modules/git-ai.nix
+    ../modules/gws.nix
     # Consider group dev related files, e.g. dev, direnv, git, emacs, editor
     ./dev.nix
     ./direnv.nix
