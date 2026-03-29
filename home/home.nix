@@ -85,16 +85,16 @@
     #};
 
     shellAliases = {
-      "sys-rebuild" =
-        "sudo darwin-rebuild switch --show-trace --flake ~/projects/config/dotfiles-slim --refresh";
-      "sys-rollback" = "darwin-rebuild switch --rollback";
-      "sys-update" = "cd ~/projects/config/dotfiles-slim && nix flake update";
+      "sys-rebuild" = "cd ~/projects/config/dotfiles-slime && make build && make switch";
+      "sys-rollback" = "cd ~/projects/config/dotfiles-slim && make rollback";
+      "sys-update" = "cd ~/projects/config/dotfiles-slim && make update";
       "sys-upgrade" = "sys-update && sys-rebuild";
       # NOTE not sure which command will be more convenient, keeping duplication to experience usage pattern
       "sys-optimise" = "nix store optimise";
       "sys-cleanup" = "nix store optimise";
     };
 
+    # TODO Have ons single place for configuration - additionally karabiner is a mac only thing
     # Neo2 Configuration via Karabiner Elements
     file.".config/karabiner/karabiner.json".source = ../config/karabiner/karabiner.json;
   };
