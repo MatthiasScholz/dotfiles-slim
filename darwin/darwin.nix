@@ -272,6 +272,9 @@
       "bashdb"
       # https://zshdb.readthedocs.io/en/latest/entry-exit.html
       "zshdb"
+      # Management of Kanata via tray icon
+      # NOTE needs to be started manually and needs to run as sudo
+      "kanata-tray"
     ];
 
     casks = [
@@ -281,6 +284,7 @@
       "disk-inventory-x"
       "google-drive"
       # TODO Migrate to nixpkgs
+      # TODO sundown in case kanata works nicely
       "karabiner-elements"
       "raycast"
       "hammerspoon"
@@ -369,6 +373,7 @@
   };
 
   # Neo2 Keyboard Layout
+  # NOTE Migrated to Kanata
   # needs additional configuration of karabiner-elements as part of home-manager /home/home.nix
   # https://github.com/Cu3PO42/gleaming-glacier/blob/5abb8c0a3fb72cafbc7ca113e5f135142d0b51c8/modules/darwin/neo2/default.nix#L9
   # https://github.com/Cu3PO42/gleaming-glacier/blob/5abb8c0a3fb72cafbc7ca113e5f135142d0b51c8/config/karabiner/LICENSE.md?plain=1
@@ -377,5 +382,10 @@
     cp ${../config/karabiner/neo.icns} "/Library/Keyboard Layouts/neo.icns"
     cp ${../config/karabiner/neo.keylayout} "/Library/Keyboard Layouts/neo.keylayout"
 
+    # Kanata Configuration
+    # TODO Check if there is a better approach than using cp - via homemanager
+    echo "INFO :: Copying Kanata layout into system wide folder"
+    mkdir -p "${config.users.users.matthias.home}/Library/Application Support/kanata/"
+    cp ${../config/kanata/basbousa.kbd} "${config.users.users.matthias.home}/Library/Application Support/kanata/kanata.kbd"
   '';
 }

@@ -1,0 +1,118 @@
+;; Useful links:
+;; . identify localkeys: https://www.toptal.com/developers/keycode
+;; . example by Ben: https://github.com/benvallack/dotfiles/blob/main/kanata_12_macbook.kbd
+;; . examples: https://github.com/jtroo/kanata/blob/main/cfg_samples/
+;; . simulator: https://jtroo.github.io
+;; Config for 14" MacBook with physical f keys. This config allows for brightness etc to still work.
+(defsrc
+  esc            f1   f2   f3   f4   f5      f6   f7   f8   f9   f10     f11  f12
+  IntlBackslash  1    2    3    4    5       6    7    8    9    0       -    =    bspc
+  tab            q    w    e    r    t       y    u    i    o    p       [    ]    \ 
+  caps           a    s    d    f    g       h    j    k    l    ;       '    ret 
+  lsft           z    x    c    v    b       n    m    ,    .    /        rsft
+  fn      lctl    lalt lmet          spc                 rmet  ralt
+)
+
+(defvar
+  ;; Note: consider using different time values for your different fingers.
+  ;; For example, your pinkies might be slower to release keys and index
+  ;; fingers faster.
+  tap-time 200
+  hold-time 200 
+  hold-time-slow 300 
+)
+
+(defalias
+  ;; Define the layer switching
+  l_neosym (layer-toggle neosym)
+  caps (tap-hold $tap-time $hold-time caps @l_neosym)
+  l_neonav (layer-toggle neonav)
+  slash (tap-hold $tap-time $hold-time / @l_neonav)
+  
+
+  ;; TODO Define tabhold for ret (p + spc)
+  ;; spc_ret (tap-hold $tap-time $hold-time spc ret)
+
+  ;; Combo: Use two keys to trigger another action: esc
+  ;; c_esc (chord cesc)
+  c_p   (chord cesc p)
+  c_spc (chord cesc spc)
+
+  ;; Alias for special character for better readability
+  ;; --- Numbers Row ---
+  ts  S-grv ;; ~ : Tilde Symbol         (Shift + `)
+  em  S-1   ;; ! : Exclamation Mark     (Shift + 1)
+  ats S-2   ;; @ : At Sign              (Shift + 2)
+  hs  S-3   ;; # : Hash Sign            (Shift + 3)
+  ds  S-4   ;; $ : Dollar Sign          (Shift + 4)
+  pct S-5   ;; % : Percent Sign         (Shift + 5)
+  cs  S-6   ;; ^ : Caret Symbol         (Shift + 6)
+  amp S-7   ;; & : Ampersand Symbol     (Shift + 7)
+  ast S-8   ;; * : Asterisk Symbol      (Shift + 8)
+  pl  S-9   ;; ( : Parenthesis Left     (Shift + 9)
+  pr  S-0   ;; ) : Parenthesis Right    (Shift + 0)
+  us  S--   ;; _ : Under Score          (Shift + -)
+  pls S-=   ;; + : Plus Sign            (Shift + =)
+
+  ;; --- Punctuation Keys ---
+  bcl S-[   ;; { : Bracket Curly Left   (Shift + [)
+  bcr S-]   ;; } : Bracket Curly Right  (Shift + ])
+  vb  S-\   ;; | : Vertical Bar         (Shift + \)
+  cm  S-;   ;; : : Colon Mark           (Shift + ;)
+  dq  S-'   ;; " : Double Quote         (Shift + ')
+  bal S-,   ;; < : Bracket Angle Left   (Shift + ,)
+  bar S-.   ;; > : Bracket Angle Right  (Shift + .)
+  qm  S-/   ;; ? : Question Mark        (Shift + /)
+)
+
+;; Combo Configuration - hit both keys within 15 miliseconds
+;; TODO TEST
+(defchords cesc 15
+  ( p       ) p
+  (   spc   ) spc
+  ( p spc   ) ret
+)
+
+;; Definition of the key mapping
+;; Default layer
+(deflayer neo
+  esc            f1   f2   f3   f4   f5      f6   f7   f8   f9   f10     f11  f12
+  IntlBackslash  1    2    3    4    5       6    7    8    9    0       -    =    bspc
+
+  ;; tab         q    w    e    r    t       y    u    i    o    p       [    ]    \
+  tab            x    v    l    c    w       k    h    g    f    q       XX   XX   XX
+  ;; caps        a    s    d    f    g       h    j    k    l    ;       '    ret
+  @caps          u    i    a    e    o       s    n    r    t    d       y    ret
+  ;; lsft        z    x    c    v    b       n    m    ,    .    /       rsft
+  lsft           XX   j    XX   @c_p z       b    m    ,    .    @slash  rsft
+
+  fn      lctl    lalt lmet          @c_spc                 rmet  ralt
+)
+
+(deflayer neosym
+  esc            f1   f2   f3   f4   f5      f6     f7   f8   f9   f10     f11  f12
+  IntlBackslash  1    2    3    4    5       6      7    8    9    0       -    =    bspc
+
+  ;; tab         q    w    e    r    t       y      u    i    o    p       [    ]    \
+  tab            \    @us  [    ]    @cs     @em    @bal @bar =    @pct    XX   XX   XX
+  ;; caps        a    s    d    f    g       h      j    k    l    ;       '    ret
+  XX             @hs  /    @bcl @bcr @ast    @qm    @pl  @pr  -    ;       @ats ret
+  ;; lsft        z    x    c    v    b       n      m    ,    .    /       rsft
+  lsft           XX   @ds  @vb  @ts  `       @cm    @dq  '    @amp XX      rsft
+
+  fn      lctl    lalt lmet          spc                      rmet  ralt
+)
+
+(deflayer neonav
+  esc            f1   f2   f3   f4   f5      f6   f7   f8   f9   f10     f11  f12
+  IntlBackslash  1    2    3    4    5       6    7    8    9    0       -    =    bspc
+ 
+  ;; tab         q    w    e    r    t       y    u    i    o    p       [    ]    \
+  tab            XX   bspc up   del  XX      7    8    9    @pls XX      XX   XX   XX
+  ;; caps        a    s    d    f    g       h    j    k    l    ;       '    ret
+  XX             home left down rght end     4    5    6    0    .       =    ret 
+  ;; lsft        z    x    c    v    b       n    m    ,    .    /       rsft
+  lsft           XX   XX   ret  XX   XX      1    2    3    -    ,       rsft
+   
+  fn             lctl   lalt   lmet          spc           rmet ralt
+)
