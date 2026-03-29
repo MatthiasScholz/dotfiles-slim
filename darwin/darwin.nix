@@ -273,7 +273,6 @@
       # https://zshdb.readthedocs.io/en/latest/entry-exit.html
       "zshdb"
       # Management of Kanata via tray icon
-      # NOTE needs to be started manually and needs to run as sudo
       "kanata-tray"
     ];
 
@@ -384,8 +383,44 @@
 
     # Kanata Configuration
     # TODO Check if there is a better approach than using cp - via homemanager
+    # FIXME remove tight coupling to specific user names: matthias, inculding kanata-try configuration file
     echo "INFO :: Copying Kanata layout into system wide folder"
     mkdir -p "${config.users.users.matthias.home}/Library/Application Support/kanata/"
-    cp ${../config/kanata/basbousa.kbd} "${config.users.users.matthias.home}/Library/Application Support/kanata/kanata.kbd"
+    cp -f ${../config/kanata/basbousa.kbd} "${config.users.users.matthias.home}/Library/Application Support/kanata/kanata.kbd"
+
+    # .Kanata Tray Autostart Configuration
+    # Configure launchctl
+    # -> https://github.com/rszyma/kanata-tray/issues/67#issuecomment-3172766036 
+    mkdir -p "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/"
+    # TODO Check if files gets updated properly
+    cp -f ${../config/kanata/kanata-tray.toml} "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/"
+
+    # TODO Check if there is a better nix way to configure launchctl with proper permissions
+    # FIXME add kanata-tray binary in the path
+    echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray" | sudo tee /private/etc/sudoers.d/kanata-tray
   '';
+
+  launchd = {
+    user = {
+      agents = {
+        kanata-tray = {
+          command = "sudo /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray";
+          serviceConfig = {
+            KeepAlive = true;
+            RunAtLoad = true;
+            LimitLoadToSessionType = "Aqua";
+            ProcessType = "Interactive";
+            Label = "com.kanata-tray";
+            StandardOutPath = "/tmp/kanata-tray.out.log";
+            StandardErrorPath = "/tmp/kanata-tray.err.log";
+            EnvironmentVariables = {
+              KANATA_TRAY_LOG_DIR = "/tmp/";
+              KANATA_TRAY_CONFIG_DIR = "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/";
+            };
+          };
+        };
+      };
+    };
+  };
+
 }
