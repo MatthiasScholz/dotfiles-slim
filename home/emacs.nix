@@ -58,6 +58,9 @@
     # TODO emacs: move font configuration outside, since there are now many
     nerd-fonts.fira-code
     nerd-fonts.fira-mono
+    nerd-fonts.symbols-only
+    # emacs fallback font
+    symbola
     # to build vterm
     cmake
     libtool # missing alias to glibtool need for vterm compilation
@@ -99,8 +102,6 @@
     libgccjit
     # :lang lua
     lua-language-server
-    # emacs fallback font
-    symbola
   ];
   # TODO .Doomemacs Installation
 
