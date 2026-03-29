@@ -11,6 +11,7 @@
   programs.git = {
     enable = true;
     package = lib.lowPrio pkgs.git;
+    signing.format = "ssh";
     # TODO Inject from profile Configuration
     settings.user.name = "MatthiasScholzTW";
     settings.init.defaultBranch = "main";
