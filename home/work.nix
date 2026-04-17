@@ -9,6 +9,7 @@
   modules.gws.enable = true;
 
   home.packages = with pkgs; [
-    zoom-us
+    # FIXME outdated version
+    # zoom-us
   ];
 }

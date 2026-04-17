@@ -79,6 +79,8 @@ in
 
   home.packages = [
     # Additional packages to support plugins in obsidian
+    # FIXME currently broken
+    # pkgs.defuddle-cli
     # TODO Reconsider since switch to marimo which allows a more direct interaction
     # https://github.com/d-eniz/jupymd
     #pkgs.python313

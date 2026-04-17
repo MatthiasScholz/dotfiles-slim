@@ -272,6 +272,8 @@
       "bashdb"
       # https://zshdb.readthedocs.io/en/latest/entry-exit.html
       "zshdb"
+      # FIXME opa broken nix package on darwin
+      "opa"
       # Management of Kanata via tray icon
       "kanata-tray"
     ];
@@ -314,6 +316,8 @@
       "orcaslicer"
       # UNUSED "freecad"
       # FIXME "raspberry-pi-imager"
+      # FIXME move back to nixpkgs once more recent version is publish > 7
+      "zoom"
     ];
 
     masApps = {
