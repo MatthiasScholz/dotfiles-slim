@@ -30,6 +30,7 @@
     ./p1.nix
     ./p2.nix
     ./tinker.nix
+    ./agentic.nix
   ];
 
   # Create directories in the home folder
