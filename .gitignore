@@ -23,3 +23,6 @@ devenv.local.nix
 .pre-commit-config.yaml
 /key.txt
 /result
+node_modules
+/.agent-shell/
+.pi
