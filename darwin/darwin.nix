@@ -385,15 +385,15 @@
     # TODO Check if there is a better approach than using cp - via homemanager
     # FIXME remove tight coupling to specific user names: matthias, inculding kanata-try configuration file
     echo "INFO :: Copying Kanata layout into system wide folder"
-    mkdir -p "${config.users.users.matthias.home}/Library/Application Support/kanata/"
-    cp -f ${../config/kanata/basbousa.kbd} "${config.users.users.matthias.home}/Library/Application Support/kanata/kanata.kbd"
+    mkdir -p "$HOME/Library/Application Support/kanata/"
+    cp -f ${../config/kanata/basbousa.kbd} "$HOME/Library/Application Support/kanata/kanata.kbd"
 
     # .Kanata Tray Autostart Configuration
     # Configure launchctl
     # -> https://github.com/rszyma/kanata-tray/issues/67#issuecomment-3172766036 
-    mkdir -p "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/"
+    mkdir -p "$HOME/Library/Application Support/kanata-tray/"
     # TODO Check if files gets updated properly
-    cp -f ${../config/kanata/kanata-tray.toml} "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/"
+    cp -f ${../config/kanata/kanata-tray.toml} "$HOME/Library/Application Support/kanata-tray/"
 
     # TODO Check if there is a better nix way to configure launchctl with proper permissions
     # FIXME add kanata-tray binary in the path
@@ -415,7 +415,7 @@
             StandardErrorPath = "/tmp/kanata-tray.err.log";
             EnvironmentVariables = {
               KANATA_TRAY_LOG_DIR = "/tmp/";
-              KANATA_TRAY_CONFIG_DIR = "${config.users.users.matthias.home}/Library/Application Support/kanata-tray/";
+              KANATA_TRAY_CONFIG_DIR = "$HOME/Library/Application Support/kanata-tray/";
             };
           };
         };
