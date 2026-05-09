@@ -19,45 +19,12 @@
     uv
     # LSP for nix compatible wih zed
     nil
-    # CLI AI Agents
     # FIXME broken
-    # BROKEN aider-chat-full
-    # BROKEN aider-chat-with-help
-    # WORKS aider-chat
-    # WORKS aider-chat-with-browser
-    # WORKS
-    # UNUSED aider-chat-with-playwright
-    # Focus on aider
-    gemini-cli
-    # .https://github.com/charmbracelet/crush
-    # NOTE Does not seem to support ACP (2026-01-09)
-    # FIXME broken 2026-01-26
-    # crush
-    # FIXME there is custom files manually created in
-    # TODO incorporate my personal global opencode configuration
-    # ~/.config/opencode/agent/docs-writer.md
-    # from
-    # https://opencode.ai/docs/agents/#examples
-    opencode
     # Modable Development
     # TODO unsupported on darwin
     # https://search.nixos.org/packages?channel=unstable&show=glamoroustoolkit&query=glamoroustoolkit
     # glamoroustoolkit
   ];
-
-  # Better opencode management
-  imports = [
-    ../modules/ocx-module.nix
-  ];
-
-  # Enable it globally with a single flag
-  programs.ocx.enable = true;
-
-  # Optional: Pre-define your favorite registries globally
-  xdg.configFile."ocx/ocx.jsonc".text = builtins.toJSON {
-    registries = [ "https://registry.kdco.dev" ];
-    telemetry = false;
-  };
 
   /*
     FIXME not working "No such file or directory" - test_open_paths_action
