@@ -8,7 +8,8 @@
 {
   home.packages = with pkgs; [
     # UNUSED inkscape
-    rapidraw
+    # FIXME broken
+    # rapidraw
   ];
 
 }
