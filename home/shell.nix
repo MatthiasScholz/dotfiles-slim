@@ -42,7 +42,7 @@ in
     # file = {
     #   ".terraform.d/plugin-cache" = {
     #     source = pkgs.emptyDirectory; # with standard read/write/execute permissions
-    #     onChange = "chown -R matthias:matthias";
+    #     onChange = "chown -R ${config.home.username}:staff";
     #     recursive = true;
     #   };
     # };

@@ -15,7 +15,6 @@
   ];
 
   # Declaratively create /etc/nix/nix.custom.conf for Determinate Nix
-  # FIXME avoid hard-coding the system.primaryUser
   environment.etc."nix/nix.custom.conf".text = ''
     # This configuration is necessary to allow the user to use binary caches
     # like the one required by devenv (Cachix) without being root.
@@ -23,7 +22,7 @@
     # Used by https://github.com/DeterminateSystems/nix-installer.
 
     #alternative, less secure
-    #trusted-users = root matthias
+    #trusted-users = root ${config.system.primaryUser}
 
     extra-substituters = https://devenv.cachix.org
     extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nixpkgs-python.cachix.org-1:hxjI7pFxTyuTHn2NkvWCrAUcNZLNS3ZAvfYNuYifcEU=
@@ -183,7 +182,7 @@
         # FIXME use a different path, this is only for testing
         # FIXME none of the commands are working
         skhdConfig = ''
-          ctl - k : bash -c "/Users/matthias/projects/config/dotfiles-slim/config/windowswitcher/switch.sh"
+          ctl - k : bash -c "$HOME/projects/config/dotfiles-slim/config/windowswitcher/switch.sh"
 
           # select window
           alt + cmd - w: yabai -m query --windows \
@@ -380,29 +379,38 @@
   # needs additional configuration of karabiner-elements as part of home-manager /home/home.nix
   # https://github.com/Cu3PO42/gleaming-glacier/blob/5abb8c0a3fb72cafbc7ca113e5f135142d0b51c8/modules/darwin/neo2/default.nix#L9
   # https://github.com/Cu3PO42/gleaming-glacier/blob/5abb8c0a3fb72cafbc7ca113e5f135142d0b51c8/config/karabiner/LICENSE.md?plain=1
-  system.activationScripts.extraActivation.text = ''
-    echo "INFO :: Copying Neo layout into system wide folder"
-    cp ${../config/karabiner/neo.icns} "/Library/Keyboard Layouts/neo.icns"
-    cp ${../config/karabiner/neo.keylayout} "/Library/Keyboard Layouts/neo.keylayout"
+  system.activationScripts.extraActivation.text =
+    let
+      user = config.system.primaryUser;
+      home = config.users.users.${user}.home;
+      kanataTrayConfig = pkgs.writeText "kanata-tray.toml" (
+        builtins.replaceStrings [ "/Users/matthias" ] [ home ] (
+          builtins.readFile ../config/kanata/kanata-tray.toml
+        )
+      );
+    in
+    ''
+      echo "INFO :: Copying Neo layout into system wide folder"
+      cp -f ${../config/karabiner/neo.icns} "/Library/Keyboard Layouts/neo.icns"
+      cp -f ${../config/karabiner/neo.keylayout} "/Library/Keyboard Layouts/neo.keylayout"
 
-    # Kanata Configuration
-    # TODO Check if there is a better approach than using cp - via homemanager
-    # FIXME remove tight coupling to specific user names: matthias, inculding kanata-try configuration file
-    echo "INFO :: Copying Kanata layout into system wide folder"
-    mkdir -p "$HOME/Library/Application Support/kanata/"
-    cp -f ${../config/kanata/basbousa.kbd} "$HOME/Library/Application Support/kanata/kanata.kbd"
+      # Kanata Configuration
+      # TODO Check if there is a better approach than using cp - via homemanager
+      echo "INFO :: Copying Kanata layout into system wide folder"
+      mkdir -p "${home}/Library/Application Support/kanata/"
+      cp -f ${../config/kanata/basbousa.kbd} "${home}/Library/Application Support/kanata/kanata.kbd"
 
-    # .Kanata Tray Autostart Configuration
-    # Configure launchctl
-    # -> https://github.com/rszyma/kanata-tray/issues/67#issuecomment-3172766036 
-    mkdir -p "$HOME/Library/Application Support/kanata-tray/"
-    # TODO Check if files gets updated properly
-    cp -f ${../config/kanata/kanata-tray.toml} "$HOME/Library/Application Support/kanata-tray/"
+      # .Kanata Tray Autostart Configuration
+      # Configure launchctl
+      # -> https://github.com/rszyma/kanata-tray/issues/67#issuecomment-3172766036
+      mkdir -p "${home}/Library/Application Support/kanata-tray/"
+      # TODO Check if files gets updated properly
+      cp -f ${kanataTrayConfig} "${home}/Library/Application Support/kanata-tray/kanata-tray.toml"
 
-    # TODO Check if there is a better nix way to configure launchctl with proper permissions
-    # FIXME add kanata-tray binary in the path
-    echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray" | sudo tee /private/etc/sudoers.d/kanata-tray
-  '';
+      # TODO Check if there is a better nix way to configure launchctl with proper permissions
+      # FIXME add kanata-tray binary in the path
+      echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray" | sudo tee /private/etc/sudoers.d/kanata-tray
+    '';
 
   launchd = {
     user = {
@@ -419,7 +427,9 @@
             StandardErrorPath = "/tmp/kanata-tray.err.log";
             EnvironmentVariables = {
               KANATA_TRAY_LOG_DIR = "/tmp/";
-              KANATA_TRAY_CONFIG_DIR = "$HOME/Library/Application Support/kanata-tray/";
+              KANATA_TRAY_CONFIG_DIR = "${
+                config.users.users.${config.system.primaryUser}.home
+              }/Library/Application Support/kanata-tray/";
             };
           };
         };
