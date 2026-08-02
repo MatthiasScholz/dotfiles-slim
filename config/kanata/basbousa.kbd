@@ -23,6 +23,13 @@
 )
 
 (defalias
+  ;; MacOS specials
+  mc C-up ;; Mission Control
+  sls M-spc ;; Spotlight Search
+  dtn S-C-A-M-f5 ;; Dictation
+  dnd S-C-A-M-f6 ;; Do Not Disturb
+  lp S-C-A-M-l ;; Launchpad (unused)
+
   ;; Define the layer switching
   l_neosym (layer-toggle neosym)
   caps (tap-hold $tap-time $hold-time caps @l_neosym)
@@ -76,7 +83,8 @@
 ;; Definition of the key mapping
 ;; Default layer
 (deflayer neo
-  esc            f1   f2   f3   f4   f5      f6   f7   f8   f9   f10     f11  f12
+  ;;esc          f1   f2   f3   f4   f5      f6   f7   f8   f9   f10     f11  f12
+  esc            🔅   🔆   @mc  @sls  @dtn  @dnd  ◀◀  ▶⏸  ▶▶  🔇   🔉    🔊
   IntlBackslash  1    2    3    4    5       6    7    8    9    0       -    =    bspc
 
   ;; tab         q    w    e    r    t       y    u    i    o    p       [    ]    \
