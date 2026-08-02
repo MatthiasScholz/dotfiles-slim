@@ -16,6 +16,10 @@ build:
 	make diff
 
 diff:
+	@if [ ! -e /run/current-system ]; then \
+		echo "Skipping diff: /run/current-system does not exist (never switched)"; \
+		exit 0; \
+	fi; \
 	nix run nixpkgs#nvd -- diff /run/current-system ./result
 
 update-diff: update build diff
