@@ -301,7 +301,7 @@
       # UNNEEDED "microsoft-teams"
       # System cleanup for manual tools
       # NOTE try using nix capabilities as much as possible
-      # "app-cleaner"
+      "appcleaner"
       # AI
       # https://msty.app
       # TODO Migrate to knowledge management: kb.nix
@@ -317,6 +317,9 @@
       # FIXME "raspberry-pi-imager"
       # FIXME move back to nixpkgs once more recent version is publish > 7
       "zoom"
+      # Better Alt Tab Handling
+      # https://github.com/rokartur/BetterCmdTab
+      "bettercmdtab"
     ];
 
     masApps = {
