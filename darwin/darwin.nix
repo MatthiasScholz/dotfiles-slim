@@ -21,6 +21,8 @@
     # We include root and for safety and system function.
     # Used by https://github.com/DeterminateSystems/nix-installer.
 
+    eval-cores = 0
+
     #alternative, less secure
     #trusted-users = root ${config.system.primaryUser}
 
