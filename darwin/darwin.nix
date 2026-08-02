@@ -11,7 +11,7 @@
     home-manager
     # System Status
     # TODO export configuration and add to this repository - including restore
-    stats
+    # FIXME broken stats
   ];
 
   # Declaratively create /etc/nix/nix.custom.conf for Determinate Nix
@@ -255,8 +255,11 @@
 
     brews = [
       # TODO find a way to install packages using go get - reduce brew usage
-      "sm"
-      "gossm"
+      # FIXME Error: Refusing to load formula clok/sm/sm from untrusted tap clok/sm.
+      #       Run `brew trust --formula clok/sm/sm` or `brew trust clok/sm` to trust it.
+      # "sm"
+      # FIXME Error like above
+      # "gossm"
       # Make vterm work on emacs
       #      https://docs.doomemacs.org/v21.12/modules/term/vterm/
       # TODO Check if needed
@@ -265,7 +268,8 @@
       # FIXME Migrate to hammerspoon choose-gui not available on MacPro due to older MacOS
       "choose-gui"
       # TODO move into a template/aws fake - but curently no package
-      "awslim"
+      # FIXME Error like above
+      # "awslim"
       # Shell debugger
       # https://bashdb.readthedocs.io/en/latest/entry-exit.html
       "bashdb"
@@ -280,7 +284,7 @@
     casks = [
       # TODO Migrate to nixpkgs _1password-gui when package is not broken anymore
       "1password"
-      "beeper"
+      # OLD "beeper"
       "disk-inventory-x"
       "google-drive"
       # TODO Migrate to nixpkgs
