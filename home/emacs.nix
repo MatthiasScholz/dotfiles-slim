@@ -117,13 +117,22 @@
   # xdg.configFile."doom".source = ./doom; TODO Reference repository
 
   programs.zsh.initContent = ''
-      # TODO Check if doomemacs already provides this functionality somehow, via :os tty
-      # Use vterm provide configuration files to configure integration
-      # https://github.com/akermu/emacs-libvterm?tab=readme-ov-file#shell-side-configuration-files
-      if [[ "$INSIDE_EMACS" = 'vterm' ]] \
-        && [[ -n $\{EMACS_VTERM_PATH\} ]] \
-        && [[ -f $\{EMACS_VTERM_PATH\}/etc/emacs-vterm-zsh.sh ]]; then
-    	  source $\{EMACS_VTERM_PATH\}/etc/emacs-vterm-zsh.sh
-      fi
+    # TODO Check if doomemacs already provides this functionality somehow, via :os tty
+
+    # Emacs Context Support
+    # Emacs vterm shell integration (directory tracking, clear, etc.)
+    if [[ "$INSIDE_EMACS" = 'vterm' ]] \
+      && [[ -n ''${EMACS_VTERM_PATH} ]] \
+      && [[ -f ''${EMACS_VTERM_PATH}/etc/emacs-vterm-zsh.sh ]]; then
+      source "''${EMACS_VTERM_PATH}/etc/emacs-vterm-zsh.sh"
+
+      # Directory tracking via vterm_cmd (51;E) since 51;A OSC doesn't fire
+      vterm_set_directory() {
+        vterm_cmd update-pwd "$(pwd)/"
+      }
+      precmd_functions+=( vterm_set_directory )
+      # Set directory on shell startup too
+      vterm_set_directory
+    fi
   '';
 }
