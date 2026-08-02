@@ -13,13 +13,17 @@
   programs.emacs = {
     enable = true;
     # setting emacs specific binary
-    #package = (
-    #  # unsecure: pkgs.emacs-macport.override {
-    #  pkgs.emacs30.override {
-    #    # unknown: withModules = true;
-    #    # unsupported for mac: withXwidgets = true;
-    #  }
-    #);
+    package = (
+      # unsecure: pkgs.emacs-macport.override {
+      pkgs.emacs30.override {
+        # drop mailutils: mailutils-3.21 fails to link on aarch64-darwin
+        # (ld: symbol(s) not found for architecture arm64), blocking emacs build
+        # SEE: nixpkgs pkgs/applications/editors/emacs/make-emacs.nix
+        withMailutils = false;
+        # unknown: withModules = true;
+        # unsupported for mac: withXwidgets = true;
+      }
+    );
     # TODO Check if needed
     extraPackages = epkgs: [ epkgs.vterm ];
   };
