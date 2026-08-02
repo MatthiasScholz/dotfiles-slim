@@ -6,11 +6,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Stable instance
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
 
     # NOTE Pinned release specifically for the Intel Mac
-    # TODO Once released: nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
-    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-26_05.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     # For installing homebrew
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
