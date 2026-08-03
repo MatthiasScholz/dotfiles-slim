@@ -250,10 +250,11 @@
       upgrade = true;
     };
 
-    # TODO probably have to be managed via nix-homebrew
-    #taps = [
-    #  "gjbae1212/gossm"
-    #];
+    # Derive tap names from nix-homebrew.taps to stay in sync (single source of truth).
+    # See: https://github.com/zhaofengli/nix-homebrew#optional-align-homebrew-taps-config-with-nix-homebrew
+    # Homebrew normalizes "homebrew/homebrew-core" to "homebrew/core" internally, so
+    # the full names passed via builtins.attrNames work correctly in the Brewfile.
+    taps = builtins.attrNames config.nix-homebrew.taps;
 
     brews = [
       # TODO find a way to install packages using go get - reduce brew usage
