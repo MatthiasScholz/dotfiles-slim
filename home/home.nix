@@ -33,6 +33,15 @@
     ./agentic.nix
   ];
 
+  # Disable the Home Manager manual/manpage generation. This prevents
+  # `nixosOptionsDoc` from being evaluated, which currently triggers a
+  # Nix warning about `builtins.derivation` referencing the nixpkgs store
+  # path without proper context (the `options.json` derivation embeds
+  # declaration paths from nixpkgs source modules).
+  manual.html.enable = false;
+  manual.manpages.enable = false;
+  manual.json.enable = false;
+
   # Create directories in the home folder
   # https://github.com/evantravers/dotfiles/blob/1d3bcb33707f9a36c6bc6e91767b548f4865501f/users/evantravers/home-manager.nix#L18C1-L21C5
   xdg.enable = true;
