@@ -417,12 +417,56 @@
       # TODO Check if files gets updated properly
       cp -f ${kanataTrayConfig} "${home}/Library/Application Support/kanata-tray/kanata-tray.toml"
 
-      # TODO Check if there is a better nix way to configure launchctl with proper permissions
-      # FIXME add kanata-tray binary in the path
+      # sudoers entry for kanata-tray wrapper script (NOPASSWD for staff group).
+      # The wrapper at /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray
+      # delegates to kanata-tray.real for normal operation, and also provides
+      # helper subcommands: --install-karabiner-dk, --kill-manual-daemon,
+      # --clear-logs, --bootstrap-only, --check-socket, --test-kanata.
       echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray" | sudo tee /private/etc/sudoers.d/kanata-tray
     '';
 
   launchd = {
+    # === karabiner-dk system daemon (protocol fix for nix kanata) ===
+    #
+    # PROTOCOL COMPATIBILITY FIX:
+    #   nix kanata v1.12.0 communicates with the virtual HID daemon using
+    #   pqrs::local_datagram (SOCK_DGRAM) over a Unix domain socket.
+    #   The homebrew Karabiner-Elements daemon uses pqrs::unix_domain_stream
+    #   (SOCK_STREAM). These are INCOMPATIBLE — nix kanata cannot talk to the
+    #   homebrew daemon and fails with a connection error.
+    #
+    #   Solution: Use nix `karabiner-dk` v6.6.0, which uses local_datagram
+    #   (SOCK_DGRAM), matching nix kanata's protocol. This system daemon
+    #   provides the DriverKit virtual HID device and a root-only SOCK_DGRAM
+    #   socket that nix kanata (managed by kanata-tray) can connect to.
+    #
+    # ARCHITECTURE:
+    #   1. karabiner-dk system daemon (root): provides the DriverKit virtual HID
+    #      device and the SOCK_DGRAM socket at:
+    #      /Library/Application Support/org.pqrs/tmp/rootonly/vhidd_server/*.sock
+    #   2. kanata (managed by kanata-tray, runs as root via sudo): connects to
+    #      the virtual HID device via the socket above.
+    #   3. kanata-tray user agent (user context, sudo for kanata): GUI tray app
+    #      for managing kanata presets.
+    #
+    # NOTE: After `make setup`, the karabiner-dk system daemon starts
+    #       automatically on boot. The nix-generated plist replaces any
+    #       manually-installed versions.
+    daemons = {
+      karabiner-dk = {
+        # The nix store path contains "Application Support" (with a space).
+        # nix-darwin wraps command in: /bin/sh -c "/bin/wait4path /nix/store && <command>"
+        # Single-quote the path so the shell treats it as a single word.
+        command = "exec '${pkgs.karabiner-dk}/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'";
+        serviceConfig = {
+          Label = "com.karabiner.VirtualHIDDevice-Daemon";
+          KeepAlive = true;
+          RunAtLoad = true;
+          StandardOutPath = "/tmp/karabiner-dk.out.log";
+          StandardErrorPath = "/tmp/karabiner-dk.err.log";
+        };
+      };
+    };
     user = {
       agents = {
         kanata-tray = {

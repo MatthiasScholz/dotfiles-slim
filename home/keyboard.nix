@@ -18,6 +18,7 @@
     # karabiner-elements
   ];
 
-  # TODO consider launching the application with launchd
-  #      check darwin.nix + ollama for an example
+  # karabiner-dk daemon is launched via launchd.system.daemons in darwin.nix
+  # The daemon runs as root and provides the DriverKit virtual HID device
+  # that kanata connects to via pqrs::local_datagram (SOCK_DGRAM).
 }
