@@ -39,8 +39,8 @@ in
 
   #   # Dynamically select the package based on architecture
   #   package =
-  #     if pkgs.system == "aarch64-darwin" then
-  #       inputs.opencode.packages.${pkgs.system}.default
+  #   if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then
+  #     inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default
   #     else
   #       let
   #         appVersion = "1.1.48";

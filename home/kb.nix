@@ -17,7 +17,7 @@ let
         sha256 = "sha256-FghgCtVQIxc9qB5vZZlblugk6HLnxoT8xanZK+N8qEc=";
       })
       {
-        inherit (pkgs) system;
+        inherit (pkgs.stdenv.hostPlatform) system;
         config.allowUnfree = true;
       };
 
