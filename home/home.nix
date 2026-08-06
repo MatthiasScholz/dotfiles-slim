@@ -36,6 +36,10 @@
   # Create directories in the home folder
   # https://github.com/evantravers/dotfiles/blob/1d3bcb33707f9a36c6bc6e91767b548f4865501f/users/evantravers/home-manager.nix#L18C1-L21C5
   xdg.enable = true;
+  # Disable linkApps on x86_64-darwin: nixpkgs 26.05 deprecates x86_64-darwin,
+  # so lib.platforms.darwin only includes aarch64-darwin and the assertion fails.
+  targets.darwin.linkApps.enable = pkgs.stdenv.hostPlatform.system == "aarch64-darwin";
+
   # TODO: move this to ./home-manager/modules/darwin or something - this file should be os agnostic
   xdg.configFile."hammerspoon" = lib.mkIf pkgs.stdenv.isDarwin {
     # TODO streamline configuration to config folder
