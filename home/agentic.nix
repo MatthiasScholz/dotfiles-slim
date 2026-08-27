@@ -143,8 +143,8 @@ in
   home.packages = [
     # FIXME uses postgresql test which is unsupported for darwin
     #pkgs.open-webui
-    # GEMINI
-    pkgs.gemini-cli
+    # Ggogle
+    pkgs.antigravity-cli
     # PI
     # https://pi.dev, https://github.com/badlogic/pi-mono/, https://lucumr.pocoo.org/2026/1/31/pi/
     pkgs.pi-coding-agent
