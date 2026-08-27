@@ -10,7 +10,7 @@
   packages = [
     # pi-web installation
     pkgs.typescript
-    pkgs.vite
+    pkgs.vitejs
     # pi-web-access video frame extraction
     pkgs.ffmpeg
     pkgs.yt-dlp
