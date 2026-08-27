@@ -422,7 +422,18 @@
       # delegates to kanata-tray.real for normal operation, and also provides
       # helper subcommands: --install-karabiner-dk, --kill-manual-daemon,
       # --clear-logs, --bootstrap-only, --check-socket, --test-kanata.
-      echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray" | sudo tee /private/etc/sudoers.d/kanata-tray
+      echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray.real" | sudo tee /private/etc/sudoers.d/kanata-tray
+
+      # === Create stable symlink for kanata binary ===
+      # The root LaunchDaemon references /Applications/kanata (not the nix store
+      # path) so the config is stable across nix rebuilds. The symlink is
+      # recreated on every activation to point at the current nix store path.
+      # TCC is not required (system LaunchDaemons bypass it), but the stable
+      # path keeps the config consistent if the architecture ever changes back
+      # to a user-spawned kanata.
+      # Ref: https://github.com/ryoppippi/dotfiles (commit 11088b4)
+      echo "INFO :: Creating stable kanata symlink at /Applications/kanata"
+      ln -sf "${pkgs.kanata}/bin/kanata" "/Applications/kanata"
     '';
 
   launchd = {
@@ -438,26 +449,43 @@
     #   Solution: Use nix `karabiner-dk` v6.6.0, which uses local_datagram
     #   (SOCK_DGRAM), matching nix kanata's protocol. This system daemon
     #   provides the DriverKit virtual HID device and a root-only SOCK_DGRAM
-    #   socket that nix kanata (managed by kanata-tray) can connect to.
+    #   socket that nix kanata connects to.
+    #
+    # WHY KANATA RUNS AS A SEPARATE ROOT LAUNCHDAEMON (not spawned by kanata-tray):
+    #   1. Karabiner's vHID socket lives in a root-only directory
+    #      (/Library/Application Support/org.pqrs/tmp/rootonly/), so kanata must
+    #      run as root to open the virtual HID device.
+    #   2. kanata-tray drops privileges to the user before spawning, which breaks
+    #      vHID access. Re-elevating via a sudo wrapper spawns kanata as root but
+    #      WITHOUT a GUI session, so the macOS TCC Accessibility prompt cannot be
+    #      shown and kanata fails to grab the keyboard.
+    #   Solution: Run kanata as a root LaunchDaemon. System LaunchDaemons bypass
+    #   TCC entirely and can access the root-only vHID socket directly.
     #
     # ARCHITECTURE:
     #   1. karabiner-dk system daemon (root): provides the DriverKit virtual HID
     #      device and the SOCK_DGRAM socket at:
     #      /Library/Application Support/org.pqrs/tmp/rootonly/vhidd_server/*.sock
-    #   2. kanata (managed by kanata-tray, runs as root via sudo): connects to
-    #      the virtual HID device via the socket above.
-    #   3. kanata-tray user agent (user context, sudo for kanata): GUI tray app
-    #      for managing kanata presets.
+    #   2. kanata system daemon (root): connects to the virtual HID device via the
+    #      socket above. Uses stable symlink /Applications/kanata → nix store path.
+    #      Created by activation script: ln -sf ${pkgs.kanata}/bin/kanata /Applications/kanata
+    #   3. kanata-tray user agent (user context): GUI tray app that connects to
+    #      kanata via TCP (port 5829) for on/off/layer/preset control. It does NOT
+    #      spawn kanata (autorun=false in kanata-tray.toml).
     #
-    # NOTE: After `make setup`, the karabiner-dk system daemon starts
-    #       automatically on boot. The nix-generated plist replaces any
-    #       manually-installed versions.
+    # MACOS ACCESSIBILITY (TCC):
+    #   Not required for the root LaunchDaemon (system daemons bypass TCC).
+    #   The stable symlink /Applications/kanata is kept for consistency but is not
+    #   strictly necessary for TCC anymore.
+    #
+    # NOTE: After `make setup`, both system daemons start automatically on boot.
+    #       The nix-generated plists replace any manually-installed versions.
     daemons = {
       karabiner-dk = {
         # The nix store path contains "Application Support" (with a space).
         # nix-darwin wraps command in: /bin/sh -c "/bin/wait4path /nix/store && <command>"
         # Single-quote the path so the shell treats it as a single word.
-        command = "exec '${pkgs.karabiner-dk}/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'";
+        command = "'${pkgs.karabiner-dk}/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon'";
         serviceConfig = {
           Label = "com.karabiner.VirtualHIDDevice-Daemon";
           KeepAlive = true;
@@ -467,25 +495,24 @@
         };
       };
     };
-    user = {
-      agents = {
-        kanata-tray = {
-          command = "sudo /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray";
-          serviceConfig = {
-            KeepAlive = true;
-            RunAtLoad = true;
-            LimitLoadToSessionType = "Aqua";
-            ProcessType = "Interactive";
-            Label = "com.kanata-tray";
-            StandardOutPath = "/tmp/kanata-tray.out.log";
-            StandardErrorPath = "/tmp/kanata-tray.err.log";
-            EnvironmentVariables = {
-              KANATA_TRAY_LOG_DIR = "/tmp/";
-              KANATA_TRAY_CONFIG_DIR = "${
-                config.users.users.${config.system.primaryUser}.home
-              }/Library/Application Support/kanata-tray/";
-            };
-          };
+    # kanata runs as a root LaunchDaemon to access the Karabiner-VirtualHIDDevice
+    # IPC socket at /Library/Application Support/org.pqrs/tmp/rootonly/.
+    # Running as a user agent blocks access to this root-only directory.
+    daemons = {
+      kanata = {
+        # Runs kanata as a root LaunchDaemon via nix-darwin.
+        # This gives it access to the Karabiner Virtual HID Device IPC socket
+        # at /Library/Application Support/org.pqrs/tmp/rootonly/.
+        # The karabiner-dk daemon must be running and approved in System Settings.
+        command = "/Applications/kanata -c '${
+          config.users.users.${config.system.primaryUser}.home
+        }/Library/Application Support/kanata/kanata.kbd' --port 5829";
+        serviceConfig = {
+          Label = "com.kanata";
+          KeepAlive = true;
+          RunAtLoad = true;
+          StandardOutPath = "/tmp/kanata.out.log";
+          StandardErrorPath = "/tmp/kanata.err.log";
         };
       };
     };

@@ -13,7 +13,15 @@ defaults.tcp_port = 5829
 
 
 [presets.'Default Preset']
-kanata_executable = '/Users/matthias/.nix-profile/bin/kanata'
-
-#kanata_config = '/Users/<user>/.config/kanata/kanata.kbd'
-autorun = true
+# kanata runs as a root LaunchDaemon (see darwin.nix) for two reasons:
+#   1. Karabiner's vHID server socket lives in a root-only dir
+#      (/Library/Application Support/org.pqrs/tmp/rootonly/), so kanata
+#      must be root to open the virtual HID device.
+#   2. The tray drops privileges before spawning, which both breaks vHID
+#      access and prevents the TCC Accessibility prompt from showing in a
+#      non-GUI context. Running kanata as a system LaunchDaemon sidesteps
+#      both issues (root + bypasses TCC).
+# The tray connects via TCP (port 5829) for on/off/layer control.
+# kanata_executable is intentionally omitted — do NOT add it back.
+kanata_config = '/Users/matthias/Library/Application Support/kanata/kanata.kbd'
+autorun = false
