@@ -15,7 +15,7 @@
     # setting emacs specific binary
     package = (
       # unsecure: pkgs.emacs-macport.override {
-      pkgs.emacs30.override {
+      pkgs.emacs.override {
         # drop mailutils: mailutils-3.21 fails to link on aarch64-darwin
         # (ld: symbol(s) not found for architecture arm64), blocking emacs build
         # SEE: nixpkgs pkgs/applications/editors/emacs/make-emacs.nix
