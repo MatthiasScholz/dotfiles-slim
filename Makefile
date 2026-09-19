@@ -7,7 +7,13 @@ info:
 
 update:
 	nix flake update
+	./scripts/update-opencode-plugin-versions.sh
 
+update-nixd:
+	sudo determinate-nixd upgrade
+
+login-flake-hub:
+	determinate-nixd login
 
 # Name of the profile take from flake.nix
 profile ?= .#Matthiass-MacBook-Pro
