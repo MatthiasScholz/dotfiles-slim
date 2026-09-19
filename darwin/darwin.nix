@@ -313,6 +313,7 @@
       # https://msty.app
       # TODO Migrate to knowledge management: kb.nix
       # UNUSED "msty"
+      # NOTE unauthorized "hermes-desktop"
       # TODO try to get skhd working
       "icanhazshortcut"
       # Keyboard Configuration Management
