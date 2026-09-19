@@ -417,23 +417,117 @@
       # TODO Check if files gets updated properly
       cp -f ${kanataTrayConfig} "${home}/Library/Application Support/kanata-tray/kanata-tray.toml"
 
-      # sudoers entry for kanata-tray wrapper script (NOPASSWD for staff group).
-      # The wrapper at /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray
-      # delegates to kanata-tray.real for normal operation, and also provides
-      # helper subcommands: --install-karabiner-dk, --kill-manual-daemon,
-      # --clear-logs, --bootstrap-only, --check-socket, --test-kanata.
-      echo "%staff ALL=(root:wheel) NOPASSWD:SETENV: /opt/homebrew/Cellar/kanata-tray/0.8.0/bin/kanata-tray.real" | sudo tee /private/etc/sudoers.d/kanata-tray
+      # === Stable copy of the kanata binary (TCC requirement) ===
+      # /usr/local/bin/kanata must be a REAL FILE COPY, never a symlink:
+      # macOS TCC resolves symlinks and attributes its Input Monitoring check
+      # to the real executable path (/nix/store/.../bin/kanata), which changes
+      # on every rebuild and thereby invalidated the permission on every nix
+      # update. A copy at a stable path keeps the grant valid.
+      # Ref: https://github.com/jtroo/kanata/blob/main/docs/setup-macos.md
+      echo "INFO :: Copying kanata binary to stable path /usr/local/bin/kanata"
+      mkdir -p /usr/local/bin /usr/local/libexec
+      cp -f "${pkgs.kanata-with-cmd}/bin/kanata" /usr/local/bin/kanata
+      rm -f /Applications/kanata
 
-      # === Create stable symlink for kanata binary ===
-      # The root LaunchDaemon references /Applications/kanata (not the nix store
-      # path) so the config is stable across nix rebuilds. The symlink is
-      # recreated on every activation to point at the current nix store path.
-      # TCC is not required (system LaunchDaemons bypass it), but the stable
-      # path keeps the config consistent if the architecture ever changes back
-      # to a user-spawned kanata.
-      # Ref: https://github.com/ryoppippi/dotfiles (commit 11088b4)
-      echo "INFO :: Creating stable kanata symlink at /Applications/kanata"
-      ln -sf "${pkgs.kanata}/bin/kanata" "/Applications/kanata"
+      # === kanata-tray lifecycle shim + privileged helper ===
+      # kanata-tray (GitHub rszyma/kanata-tray) is hardcoded to SPAWN and OWN
+      # the kanata process (runner.Run -> exec.CommandContext -> cmd.Wait).
+      # It has no "monitor external kanata" mode. A user-spawned kanata cannot
+      # work (Karabiner vHID socket lives under a root-only dir), while the
+      # root daemon CAN (TCC granted, see launchd.daemons.kanata).
+      # Solution: the tray manages a lifecycle TWIN instead of kanata itself:
+      #   1. shim (/usr/local/bin/kanata-tray-shim, started by the tray):
+      #      starts the root kanata LaunchDaemon via the helper, then mirrors
+      #      its liveness by watching the kanata TCP port; exits when kanata
+      #      stops, so the tray icon reflects the REAL daemon state.
+      #   2. helper (/usr/local/libexec/kanata-manage, root-owned): the ONE
+      #      command that may stop/start the system daemon. Requires a narrow
+      #      NOPASSWD sudoers rule, because a user agent has no other way to
+      #      control a root LaunchDaemon. Paths are version-independent, so
+      #      this survives nix/brew updates (no versioned paths, no Cellar
+      #      wrapper hacks like the previous setup).
+      echo "INFO :: Installing kanata tray lifecycle shim"
+      cat > /usr/local/bin/kanata-tray-shim <<'SHIM'
+#!/bin/bash
+# Lifecycle twin of the root kanata LaunchDaemon for kanata-tray.
+# Started by kanata-tray as the preset process; daemon is managed via the
+# privileged helper. Exits when the kanata TCP port stops listening.
+
+sudo -n /usr/local/libexec/kanata-manage start
+
+# Wait for the daemon's TCP port (it takes a few seconds to start).
+# Will exit non-zero if it never comes up (tray marks preset crashed).
+up=0
+for _ in $(seq 1 15); do
+  if nc -z 127.0.0.1 5829 2>/dev/null; then
+    up=1
+    break
+  fi
+  sleep 1
+done
+if [ "$up" = 0 ]; then
+  echo "kanata TCP port did not come up" >&2
+  exit 1
+fi
+
+# Mirror liveness; tolerate short TCP outages (e.g. daemon self-reload).
+while sleep 1; do
+  down=0
+  for _ in $(seq 1 5); do
+    if nc -z 127.0.0.1 5829 2>/dev/null; then
+      down=0
+      break
+    fi
+    down=$((down + 1))
+    sleep 1
+  done
+  if [ "$down" -ge 5 ]; then
+    exit 0
+  fi
+done
+SHIM
+      chmod 755 /usr/local/bin/kanata-tray-shim
+
+      cat > /usr/local/libexec/kanata-manage <<'HELPER'
+#!/bin/bash
+# Start/stop the root kanata LaunchDaemon (called via sudo by the shim).
+# Deliberately restricted to start/stop only.
+PLIST=/Library/LaunchDaemons/com.kanata.plist
+case "$1" in
+  start)
+    launchctl enable system/com.kanata
+    launchctl bootstrap system "$PLIST" 2>/dev/null || true
+    # Only start if not already running; a kickstart -k would flap the TCP
+    # port (kanata needs ~2s to re-listen) and destabilize the tray.
+    if ! launchctl print system/com.kanata 2>/dev/null | grep -q "state = running"; then
+      launchctl kickstart system/com.kanata
+    fi
+    ;;
+  stop)
+    launchctl bootout system/com.kanata 2>/dev/null || true
+    ;;
+  *)
+    echo "usage: $0 {start|stop}" >&2
+    exit 2
+    ;;
+esac
+HELPER
+      chmod 755 /usr/local/libexec/kanata-manage
+
+      # Narrow NOPASSWD: only %admin may run the helper (no password prompt,
+      # required for the non-interactive tray context). Limits are enforced
+      # inside the helper itself.
+      echo "%admin ALL=(root) NOPASSWD: /usr/local/libexec/kanata-manage" > /private/etc/sudoers.d/kanata-manage
+      visudo -cf /private/etc/sudoers.d/kanata-manage >/dev/null
+      chmod 440 /private/etc/sudoers.d/kanata-manage
+
+      # Clean up leftover from the previous (hacked) setup:
+      # NOPASSWD sudoers entry for the homebrew kanata-tray wrapper.
+      rm -f /private/etc/sudoers.d/kanata-tray
+
+      # Restart the tray so it picks up the updated kanata-tray.toml (the plist
+      # itself may be unchanged, so nix-darwin will not restart the agent).
+      sudo --user=${user} -- launchctl kickstart -k "gui/$(id -u ${user})/com.kanata-tray" 2>/dev/null || true
     '';
 
   launchd = {
@@ -467,16 +561,26 @@
     #      device and the SOCK_DGRAM socket at:
     #      /Library/Application Support/org.pqrs/tmp/rootonly/vhidd_server/*.sock
     #   2. kanata system daemon (root): connects to the virtual HID device via the
-    #      socket above. Uses stable symlink /Applications/kanata → nix store path.
-    #      Created by activation script: ln -sf ${pkgs.kanata}/bin/kanata /Applications/kanata
-    #   3. kanata-tray user agent (user context): GUI tray app that connects to
-    #      kanata via TCP (port 5829) for on/off/layer/preset control. It does NOT
-    #      spawn kanata (autorun=false in kanata-tray.toml).
+    #      socket above. Uses stable copy at /usr/local/bin/kanata (see TCC note).
+    #   3. kanata-tray user agent (user context): GUI menubar app. It cannot
+    #      spawn kanata itself (vHID socket is root-only), so it runs the
+    #      lifecycle shim instead, which delegates to the root daemon and
+    #      mirrors its liveness (see activation script for rationale).
     #
-    # MACOS ACCESSIBILITY (TCC):
-    #   Not required for the root LaunchDaemon (system daemons bypass TCC).
-    #   The stable symlink /Applications/kanata is kept for consistency but is not
-    #   strictly necessary for TCC anymore.
+    # MACOS PERMISSIONS (TCC) — the critical part:
+    #   macOS TCC pins the Input Monitoring / Accessibility grants to the
+    #   executable's REAL path. Symlinks are resolved (tccd attributes the
+    #   check to the /nix/store path), and a root daemon can never receive a
+    #   TCC prompt (notifyUserOfDeniedAccessBy fails for UID 0). Therefore the
+    #   kanata binary is COPIED (not symlinked) to the stable path
+    #   /usr/local/bin/kanata by the activation script.
+    #   ==> Grant permissions ONCE to /usr/local/bin/kanata:
+    #       System Settings > Privacy & Security > Input Monitoring  (add +)
+    #       System Settings > Privacy & Security > Accessibility    (add +)
+    #   The grant survives nix switches/flake updates because the path never
+    #   changes. (macOS may invalidate it only after a kanata VERSION bump —
+    #   macOS sometimes re-pins to the original binary; if so, remove and
+    #   re-add /usr/local/bin/kanata once.)
     #
     # NOTE: After `make setup`, both system daemons start automatically on boot.
     #       The nix-generated plists replace any manually-installed versions.
@@ -494,17 +598,16 @@
           StandardErrorPath = "/tmp/karabiner-dk.err.log";
         };
       };
-    };
-    # kanata runs as a root LaunchDaemon to access the Karabiner-VirtualHIDDevice
-    # IPC socket at /Library/Application Support/org.pqrs/tmp/rootonly/.
-    # Running as a user agent blocks access to this root-only directory.
-    daemons = {
+
+      # kanata runs as a root LaunchDaemon to access the Karabiner-VirtualHIDDevice
+      # IPC socket at /Library/Application Support/org.pqrs/tmp/rootonly/.
+      # Running as a user agent blocks access to this root-only directory.
       kanata = {
         # Runs kanata as a root LaunchDaemon via nix-darwin.
         # This gives it access to the Karabiner Virtual HID Device IPC socket
         # at /Library/Application Support/org.pqrs/tmp/rootonly/.
         # The karabiner-dk daemon must be running and approved in System Settings.
-        command = "/Applications/kanata -c '${
+        command = "/usr/local/bin/kanata -c '${
           config.users.users.${config.system.primaryUser}.home
         }/Library/Application Support/kanata/kanata.kbd' --port 5829";
         serviceConfig = {
@@ -514,6 +617,21 @@
           StandardOutPath = "/tmp/kanata.out.log";
           StandardErrorPath = "/tmp/kanata.err.log";
         };
+      };
+    };
+
+    # kanata-tray runs as a user LaunchAgent (user.agents → gui domain):
+    # to pause/resume kanata over TCP 5829. Declared here so it starts at
+    # every login and survives nix switches (previously nothing started it).
+    # Uses the stable /opt/homebrew/bin/kanata-tray path (no TCC involved).
+    user.agents.kanata-tray = {
+      command = "/opt/homebrew/bin/kanata-tray";
+      serviceConfig = {
+        Label = "com.kanata-tray";
+        KeepAlive = true;
+        RunAtLoad = true;
+        StandardOutPath = "/tmp/kanata-tray.out.log";
+        StandardErrorPath = "/tmp/kanata-tray.err.log";
       };
     };
   };

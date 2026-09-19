@@ -1,27 +1,29 @@
-# For help with configuration see https://github.com/rszyma/kanata-tray/blob/main/README.md
-# "$schema" = "https://raw.githubusercontent.com/rszyma/kanata-tray/v0.1.0/doc/config_schema.json"
-'$schema' = 'https://raw.githubusercontent.com/rszyma/kanata-tray/main/doc/config_schema.json'
+# kanata-tray configuration.
+# The tray is hardcoded to spawn and OWN the "kanata" process it starts
+# (see https://github.com/rszyma/kanata-tray docs/hooks.md). Since kanata
+# itself must run as a root LaunchDaemon (Karabiner vHID socket is
+# root-only; see darwin.nix), the preset manages a lifecycle shim instead
+# of kanata directly:
+#   - kanata_executable points at a shim (/usr/local/bin/kanata-tray-shim)
+#     that starts the root daemon via a narrow privileged helper and exits
+#     as soon as the daemon's TCP port stops listening, so the tray icon
+#     always reflects the REAL daemon state.
+#   - hooks.post_stop: when the user pauses the preset, the tray stops the
+#     shim; this hook then stops the root LaunchDaemon.
 
 general.allow_concurrent_presets = false
 defaults.tcp_port = 5829
 
-[defaults.hooks]
-# Hooks allow running custom commands on specific events (e.g. when starting preset).
-# Documentation: https://github.com/rszyma/kanata-tray/blob/main/doc/hooks.md
-
 [defaults.layer_icons]
 
-
 [presets.'Default Preset']
-# kanata runs as a root LaunchDaemon (see darwin.nix) for two reasons:
-#   1. Karabiner's vHID server socket lives in a root-only dir
-#      (/Library/Application Support/org.pqrs/tmp/rootonly/), so kanata
-#      must be root to open the virtual HID device.
-#   2. The tray drops privileges before spawning, which both breaks vHID
-#      access and prevents the TCC Accessibility prompt from showing in a
-#      non-GUI context. Running kanata as a system LaunchDaemon sidesteps
-#      both issues (root + bypasses TCC).
-# The tray connects via TCP (port 5829) for on/off/layer control.
-# kanata_executable is intentionally omitted — do NOT add it back.
+kanata_executable = '/usr/local/bin/kanata-tray-shim'
 kanata_config = '/Users/matthias/Library/Application Support/kanata/kanata.kbd'
-autorun = false
+# TCP port must match launchd.daemons.kanata in darwin.nix.
+tcp_port = 5829
+# Start managing the daemon automatically when the tray launches.
+autorun = true
+
+hooks.post-stop = [
+  "sudo -n /usr/local/libexec/kanata-manage stop"
+]

@@ -18,7 +18,7 @@
 
   env.KANATA_CONFIG = "config/kanata/basbousa.kbd";
   scripts.kanata-list.exec = ''
-    kanata --cfg $KANATA_CONIFG --list
+    kanata --cfg $KANATA_CONFIG --list
   '';
 
   scripts.kanata-check.exec = ''
