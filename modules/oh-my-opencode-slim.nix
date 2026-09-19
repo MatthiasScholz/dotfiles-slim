@@ -9,34 +9,197 @@
 let
   cfg = config.programs.oh-my-opencode-slim;
 
-  # Default model configurations for each agent type
-  defaultModels = {
-    orchestrator = "opencode/nemotron-3-ultra-free";
-    oracle = "opencode/nemotron-3-ultra-free";
-    librarian = "opencode/nemotron-3-ultra-free";
-    metis = "opencode/nemotron-3-ultra-free";
-    momus = "opencode/nemotron-3-ultra-free";
-    fixer = "opencode/nemotron-3-ultra-free";
-    explorer = "opencode/nemotron-3-ultra-free";
-    developer = "opencode/nemotron-3-ultra-free";
-    coder = "opencode/nemotron-3-ultra-free";
-    researcher = "opencode/nemotron-3-ultra-free";
+  # Pinned plugin versions (refreshed via `make update` -> scripts/update-opencode-plugin-versions.sh)
+  pluginVersions = import ./opencode-plugin-versions.nix;
+
+  # Plugin spec with the pinned version, e.g. "oh-my-opencode-slim@2.2.17"
+  pluginSpec = "oh-my-opencode-slim@${cfg.version}";
+
+  # Source: https://github.com/alvinunreal/oh-my-opencode-slim/blob/master/docs/opencode-zen-free-preset.md
+  defaultPreset = "opencode-go";
+
+  defaultPresets = {
+    "opencode-go" = {
+      orchestrator = {
+        model = "opencode/x-preview-f-free";
+        variant = "high";
+        temperature = 0.4;
+        skills = [ "*" ];
+        mcps = [
+          "*"
+          "!context7"
+        ];
+      };
+      oracle = {
+        model = "opencode/big-pickle";
+        temperature = 0.4;
+        variant = "max";
+        skills = [ "simplify" ];
+        mcps = [ ];
+      };
+      explorer = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      librarian = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [
+          "context7"
+          "gh_grep"
+        ];
+      };
+      designer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.3;
+        variant = "medium";
+        skills = [ ];
+        mcps = [ ];
+      };
+      fixer = {
+        model = "opencode/hy3-free";
+        variant = "high";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      observer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.2;
+        variant = "low";
+        skills = [ ];
+        mcps = [ ];
+      };
+    };
+
+    "openrouter" = {
+      orchestrator = {
+        model = "opencode/x-preview-f-free";
+        variant = "high";
+        temperature = 0.4;
+        skills = [ "*" ];
+        mcps = [
+          "*"
+          "!context7"
+        ];
+      };
+      oracle = {
+        model = "opencode/big-pickle";
+        temperature = 0.4;
+        variant = "max";
+        skills = [ "simplify" ];
+        mcps = [ ];
+      };
+      explorer = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      librarian = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [
+          "context7"
+          "gh_grep"
+        ];
+      };
+      designer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.3;
+        variant = "medium";
+        skills = [ ];
+        mcps = [ ];
+      };
+      fixer = {
+        model = "opencode/hy3-free";
+        variant = "high";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      observer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.2;
+        variant = "low";
+        skills = [ ];
+        mcps = [ ];
+      };
+    };
+
+    # Every agent runs on an opencode free model (no usage cost)
+    "opencode-zen-free" = {
+      orchestrator = {
+        model = "opencode/x-preview-f-free";
+        variant = "high";
+        temperature = 0.4;
+        skills = [ "*" ];
+        mcps = [
+          "*"
+          "!context7"
+        ];
+      };
+      oracle = {
+        model = "opencode/big-pickle";
+        temperature = 0.4;
+        variant = "max";
+        skills = [ "simplify" ];
+        mcps = [ ];
+      };
+      explorer = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      librarian = {
+        model = "opencode/nemotron-3.5-lightning-free";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [
+          "context7"
+          "gh_grep"
+        ];
+      };
+      designer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.3;
+        variant = "medium";
+        skills = [ ];
+        mcps = [ ];
+      };
+      fixer = {
+        model = "opencode/hy3-free";
+        variant = "high";
+        temperature = 0.2;
+        skills = [ ];
+        mcps = [ ];
+      };
+      observer = {
+        model = "opencode/mimo-v2.5-free";
+        temperature = 0.2;
+        variant = "low";
+        skills = [ ];
+        mcps = [ ];
+      };
+    };
   };
 
-  # Generate the oh-my-opencode-slim.json configuration
+  # Profile name (defaults to "personal")
+  profileName = cfg.profile;
+
+  # Profile-specific config directory (opencode profile dirs are PLURAL: profiles/<name>)
+  profileConfigDir = "opencode/profiles/${profileName}";
+
+  # Generate the oh-my-opencode-slim.json "lite config" (preset-based format the plugin reads)
   generateConfig = _: {
-    models = cfg.models or defaultModels;
-    skills = cfg.skills or [ "*" ];
-    mcpPermissions = cfg.mcpPermissions or {
-      orchestrator = [ "context7" "gh_grep" ];
-      oracle = [ "context7" "gh_grep" ];
-      librarian = [ "context7" "gh_grep" ];
-      fixer = [ "context7" ];
-      explorer = [ "context7" "gh_grep" ];
-    };
-    companion = cfg.companion or false;
-    theme = cfg.theme or "dark";
-    logLevel = cfg.logLevel or "info";
+    "$schema" = "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json";
+    preset = cfg.preset;
+    presets = cfg.presets;
   };
 
 in
@@ -44,111 +207,111 @@ in
   options.programs.oh-my-opencode-slim = {
     enable = lib.mkEnableOption "oh-my-opencode-slim agent orchestration plugin";
 
-    models = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = defaultModels;
-      description = "Model assignments for each agent type";
+    # Pinned plugin version (default from modules/opencode-plugin-versions.nix)
+    version = lib.mkOption {
+      type = lib.types.str;
+      default = pluginVersions."oh-my-opencode-slim";
+      description = "Pinned oh-my-opencode-slim version (refreshed by make update)";
     };
 
-    skills = lib.mkOption {
+    # Plugins registered in the profile's tui.json (TUI version badge)
+    tuiPlugins = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "*" ];
-      description = "Skills to enable for agents";
+      default = [ pluginSpec ];
+      description = "Plugins to register in the profile's tui.json";
     };
 
-    mcpPermissions = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.str);
-      default = {
-        orchestrator = [ "context7" "gh_grep" ];
-        oracle = [ "context7" "gh_grep" ];
-        librarian = [ "context7" "gh_grep" ];
-        fixer = [ "context7" ];
-        explorer = [ "context7" "gh_grep" ];
-      };
-      description = "MCP server permissions per agent";
+    profile = lib.mkOption {
+      type = lib.types.str;
+      default = "personal";
+      description = "OpenCode profile name (e.g., 'personal', 'work', 'dev')";
     };
 
+    # Active preset name
+    preset = lib.mkOption {
+      type = lib.types.str;
+      default = defaultPreset;
+      description = "Active preset name (must exist in presets)";
+    };
+
+    # Preset definitions: preset name -> agent name -> { model, variant, temperature, skills, mcps }
+    presets = lib.mkOption {
+      type = lib.types.attrsOf lib.types.attrs;
+      default = defaultPresets;
+      description = "Agent model presets (see opencode-zen-free-preset.md)";
+    };
+
+    # Optional: enable the desktop companion status window
     companion = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Enable the companion desktop status window";
     };
 
-    theme = lib.mkOption {
-      type = lib.types.enum [ "light" "dark" "system" ];
-      default = "dark";
-      description = "UI theme";
+    # OpenCode settings managed by the plugin
+    disableDefaultAgents = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Disable OpenCode built-in 'explore' and 'general' agents";
     };
 
-    logLevel = lib.mkOption {
-      type = lib.types.enum [ "debug" "info" "warn" "error" ];
-      default = "info";
-      description = "Log level for the plugin";
+    enableLsp = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable LSP integration by default";
     };
 
-    # Provider configuration
-    providers = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
-      default = {
-        kimi = { enabled = "no"; };
-        openai = { enabled = "no"; };
-      };
-      description = "Provider configurations (kimi, openai, etc.)";
+    backgroundSubagents = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable OpenCode background subagents and Exa websearch via environment variables";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    # Ensure bun is available for the installer
+    # Ensure bun is available for the plugin (if needed at runtime)
     home.packages = [
       pkgs.bun
       pkgs.nodejs
     ];
 
-    # Generate oh-my-opencode-slim.json configuration
-    xdg.configFile."oh-my-opencode-slim.json".text = builtins.toJSON (generateConfig { });
+    # Generate oh-my-opencode-slim.json (lite config) in profile directory
+    xdg.configFile."${profileConfigDir}/oh-my-opencode-slim.json".text = builtins.toJSON (
+      generateConfig { }
+    );
 
     # Also create a project-local config for development
     xdg.configFile.".opencode/oh-my-opencode-slim.json".text = builtins.toJSON (generateConfig { });
 
-    # Create a helper script to run the installer
-    xdg.configFile."oh-my-opencode-slim/install.sh" = {
-      executable = true;
-      text = ''
-        #!/usr/bin/env bash
-        # oh-my-opencode-slim installer helper
-        # Run this after applying the Nix configuration to install/configure the plugin
+    # TUI plugin registration - mirrors installer's addPluginToOpenCodeTuiConfig()
+    xdg.configFile."${profileConfigDir}/tui.json".text = builtins.toJSON { plugin = cfg.tuiPlugins; };
 
-        set -euo pipefail
+    # Configure OpenCode settings declaratively (replaces installer steps)
+    programs.opencode.settings = lib.mkMerge [
+      # Disable default agents (explore, general) - mirrors installer's disableDefaultAgents()
+      (lib.mkIf cfg.disableDefaultAgents {
+        agent = {
+          explore = {
+            disable = true;
+          };
+          general = {
+            disable = true;
+          };
+        };
+      })
 
-        echo "Installing oh-my-opencode-slim..."
-        bunx oh-my-opencode-slim@latest install \
-          --no-tui \
-          --kimi=${cfg.providers.kimi.enabled or "no"} \
-          --openai=${cfg.providers.openai.enabled or "no"} \
-          --tmux=no \
-          ${if cfg.companion then "--companion=yes" else "--companion=no"}
+      # Enable LSP by default - mirrors installer's enableLspByDefault()
+      (lib.mkIf cfg.enableLsp {
+        lsp = true;
+      })
+    ];
 
-        echo ""
-        echo "Installation complete. Now authenticate with your providers:"
-        echo "  opencode auth login"
-        echo ""
-        echo "Then refresh models:"
-        echo "  opencode models --refresh"
-        echo ""
-        echo "Configuration file: ~/.config/opencode/oh-my-opencode-slim.json"
-      '';
-    };
-
-    # Create a systemd/user service to run installer on first login (optional)
-    # This is commented out since it requires user interaction
-    # systemd.user.services."oh-my-opencode-slim-install" = {
-    #   description = "Install oh-my-opencode-slim plugin";
-    #   wantedBy = [ "graphical-session.target" ];
-    #   serviceConfig = {
-    #     Type = "oneshot";
-    #     ExecStart = "${config.xdg.configHome}/oh-my-opencode-slim/install.sh";
-    #     RemainAfterExit = true;
-    #   };
-    # };
+    # Environment variables for background subagents - mirrors installer's background subagents setup
+    home.sessionVariables = lib.mkMerge [
+      (lib.mkIf cfg.backgroundSubagents {
+        OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS = "true";
+        OPENCODE_ENABLE_EXA = "1";
+      })
+    ];
   };
 }

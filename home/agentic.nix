@@ -9,6 +9,9 @@
 let
   # Import our custom derivation
   pi-acp = pkgs.callPackage ./packages/pi-acp/default.nix { };
+
+  # Pinned OpenCode plugin versions (refreshed via `make update`)
+  pluginVersions = import ../modules/opencode-plugin-versions.nix;
 in
 {
   # https://github.com/nix-community/home-manager/blob/master/modules/programs/mcp.nix
@@ -29,6 +32,7 @@ in
           "mcp"
         ];
       };
+      # TODO add somehow the homeassistant MCP, but not in general availability
     };
   };
 
@@ -92,15 +96,16 @@ in
     settings = {
       autoupdate = false;
       plugin = [
-        "@mohak34/opencode-notifier@latest"
-        "opencode-gemini-auth@latest"
-        "opencode-nanobanana@latest"
-        "opencode-mem@latest"
-        "@ramtinj95/opencode-tokenscope@latest"
+        # Pinned versions (updated via make update -> scripts/update-opencode-plugin-versions.sh)
+        "@mohak34/opencode-notifier@${pluginVersions."@mohak34/opencode-notifier"}"
+        "opencode-gemini-auth@${pluginVersions."opencode-gemini-auth"}"
+        #"opencode-nanobanana@${pluginVersions."opencode-nanobanana"}"
+        "opencode-mem@${pluginVersions."opencode-mem"}"
+        "@ramtinj95/opencode-tokenscope@${pluginVersions."@ramtinj95/opencode-tokenscope"}"
         # NOTE OTel plugin needs additional configuration, either via opencode.jsonc or environment variables
         # TODO Add additional integration into the nix configuration
-        "@devtheops/opencode-plugin-otel"
-        "oh-my-opencode-slim@latest"
+        "@devtheops/opencode-plugin-otel@${pluginVersions."@devtheops/opencode-plugin-otel"}"
+        "oh-my-opencode-slim@${pluginVersions."oh-my-opencode-slim"}"
       ];
     };
 
@@ -112,27 +117,144 @@ in
   imports = [
     ../modules/ocx-module.nix
     ../modules/oh-my-opencode-slim.nix
+    #../modules/oh-my-openagent.nix
   ];
 
   # Enable it globally with a single flag
   programs.ocx.enable = false;
 
-  # Enable oh-my-opencode-slim plugin
+  # oh-my-opencode-slim orchestration plugin in the "personal" profile
+  # Uses the OpenCode Zen Free preset (all agents on opencode free models, no cost)
+  # https://github.com/alvinunreal/oh-my-opencode-slim/blob/master/docs/opencode-zen-free-preset.md
   programs.oh-my-opencode-slim = {
     enable = true;
-    # Provider configuration - set to "yes" if you have access
-    providers = {
-      kimi = { enabled = "no"; };
-      openai = { enabled = "no"; };
-    };
+    profile = "personal";
+    # Active preset (defaults to "opencode-zen-free")
+    # preset = "opencode-zen-free";
     # Optional: enable companion desktop window
     companion = false;
-    # Optional: customize models per agent
-    # models = {
-    #   orchestrator = "opencode/nemotron-3-ultra-free";
-    #   oracle = "opencode/nemotron-3-ultra-free";
-    # };
   };
+
+  /*
+    # oh-my-openagent orchestration plugin in the dedicated "omo" profile
+    programs.ohMyOpenagent = {
+      enable = true;
+      profile = "omo"; # Profile name (omo, personal, work, etc.)
+      # plugins default to pinned "[oh-my-openagent@<version>]" from the versions file
+
+      # Agent model configuration (mirrors oh-my-openagent.jsonc)
+      agents = {
+        # Sisyphus (Main Orchestrator): Requires heavy reasoning and autonomous execution.
+        sisyphus = {
+          model = "opencode/nemotron-3-ultra";
+          variant = "max";
+          fallback_models = [
+            "opencode/laguna-s-2.1"
+            "opencode/big-pickle"
+          ];
+        };
+        # Oracle (Architecture Consultant): Needs high-IQ architecture decisions.
+        oracle = {
+          model = "opencode/nemotron-3-ultra";
+          variant = "high";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+        # Librarian (Documentation Search): Needs long context and speed.
+        librarian = {
+          model = "opencode/ling-3.0-flash";
+          fallback_models = [
+            "opencode/deepseek-v4-flash"
+            "opencode/north-mini-code"
+          ];
+        };
+        # Explore (Fast Codebase Grep): Optimized for rapid pattern discovery.
+        explore = {
+          model = "opencode/deepseek-v4-flash";
+          fallback_models = [
+            "opencode/north-mini-code"
+            "opencode/ling-3.0-flash"
+          ];
+        };
+        # Multimodal Looker (Vision): Requires screenshot and UI analysis.
+        "multimodal-looker" = {
+          model = "opencode/mimo-v2.5";
+          fallback_models = [ "opencode/nemotron-3-ultra" ];
+        };
+        # Prometheus (Strategic Planner): Inherits heavy reasoning from Sisyphus.
+        prometheus = {
+          model = "opencode/nemotron-3-ultra";
+          variant = "max";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+        # Metis (Gap Analyzer): Needs strict instruction-following to catch blind spots.
+        metis = {
+          model = "opencode/laguna-s-2.1";
+          variant = "max";
+          fallback_models = [ "opencode/nemotron-3-ultra" ];
+        };
+        # Momus (Ruthless Reviewer): Validates plans against context criteria.
+        momus = {
+          model = "opencode/laguna-s-2.1";
+          variant = "max";
+          fallback_models = [ "opencode/nemotron-3-ultra" ];
+        };
+        # Atlas (Execution Conductor): Distributes tasks based on plans.
+        atlas = {
+          model = "opencode/nemotron-3-ultra";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+      };
+
+      # Category model configuration
+      categories = {
+        # UI/Frontend Tasks
+        "visual-engineering" = {
+          model = "opencode/mimo-v2.5";
+          variant = "high";
+          fallback_models = [ "opencode/nemotron-3-ultra" ];
+        };
+        # Hard Logic and Architecture
+        ultrabrain = {
+          model = "opencode/nemotron-3-ultra";
+          variant = "high";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+        # Creative/Unconventional Tasks
+        artistry = {
+          model = "opencode/big-pickle";
+          variant = "high";
+          fallback_models = [ "opencode/nemotron-3-ultra" ];
+        };
+        # Trivial/Fast Tasks
+        quick = {
+          model = "opencode/north-mini-code";
+          fallback_models = [
+            "opencode/deepseek-v4-flash"
+            "opencode/ling-3.0-flash"
+          ];
+        };
+        # Light Fallback Category
+        "unspecified-low" = {
+          model = "opencode/deepseek-v4-flash";
+          fallback_models = [ "opencode/north-mini-code" ];
+        };
+        # High-Effort Fallback Category
+        "unspecified-high" = {
+          model = "opencode/nemotron-3-ultra";
+          variant = "max";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+        # Prose and Documentation
+        writing = {
+          model = "opencode/ling-3.0-flash";
+          fallback_models = [ "opencode/laguna-s-2.1" ];
+        };
+      };
+
+      # Optional: enable companion desktop window
+      companion = false;
+    };
+  */
 
   # Optional: Pre-define your favorite registries globally
   xdg.configFile."ocx/ocx.jsonc".text = builtins.toJSON {
@@ -149,6 +271,9 @@ in
     # https://pi.dev, https://github.com/badlogic/pi-mono/, https://lucumr.pocoo.org/2026/1/31/pi/
     pkgs.pi-coding-agent
     pi-acp
+    # Claude Code
+    pkgs.claude-code
+    pkgs.claude-agent-acp
     # AIDER
     # BROKEN aider-chat-full
     # BROKEN aider-chat-with-help
