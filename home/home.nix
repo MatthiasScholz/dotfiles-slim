@@ -50,14 +50,14 @@
   targets.darwin.linkApps.enable = pkgs.stdenv.hostPlatform.system == "aarch64-darwin";
 
   # TODO: move this to ./home-manager/modules/darwin or something - this file should be os agnostic
-  xdg.configFile."hammerspoon" = lib.mkIf pkgs.stdenv.isDarwin {
+  xdg.configFile."hammerspoon" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     # TODO streamline configuration to config folder
     source = .config/hammerspoon;
     # FIXME not working options
     #target = ".config/hammerspoon";
     recursive = true;
   };
-  #xdg.configFile."hammerspoon.hyper" = lib.mkIf pkgs.stdenv.isDarwin {
+  #xdg.configFile."hammerspoon.hyper" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
   #  # TODO streamline configuration to config folder
   #  source = .config/hammerspoon/Spoons/Hyper.spoon;
   #  # FIXME not working options
@@ -91,7 +91,7 @@
     # Home Manager is pretty good at managing dotfiles. The primary way to manage
     # plain files is through 'home.file'.
     #file = {
-    #  hammerspoon = lib.mkIf pkgs.stdenvNoCC.isDarwin {
+    #  hammerspoon = lib.mkIf pkgs.stdenvNoCC.hostPlatform.isDarwin {
     #    source = ./../config/hammerspoon;
     #    target = ".hammerspoon";
     #    recursive = true;
