@@ -54,9 +54,12 @@
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/3";
     git-ai.url = "github:git-ai-project/git-ai";
 
-    gws-cli = {
+    # Raw source for the Google Workspace CLI.
+    # NOTE the upstream flake uses the deprecated `stdenv.isLinux`/`stdenv.isDarwin`
+    # (evaluation warnings), so we build it ourselves in packages/gws.nix.
+    gws-cli-src = {
       url = "github:googleworkspace/cli";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -79,7 +82,7 @@
       homebrew-gossm,
       homebrew-awslim,
       git-ai,
-      gws-cli,
+      gws-cli-src,
       ...
     }@inputs:
     let

@@ -17,7 +17,10 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [
       pkgs.google-cloud-sdk
-      inputs.gws-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
+      (import ../packages/gws.nix {
+        inherit pkgs lib;
+        gws-cli-src = inputs.gws-cli-src;
+      })
     ];
   };
 }

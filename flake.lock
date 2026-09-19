@@ -209,13 +209,8 @@
         "url": "https://flakehub.com/f/cachix/git-hooks.nix/0.1.941"
       }
     },
-    "gws-cli": {
-      "inputs": {
-        "flake-utils": "flake-utils_3",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
+    "gws-cli-src": {
+      "flake": false,
       "locked": {
         "lastModified": 1774983075,
         "narHash": "sha256-YyNIHbyZrLlXYtWxZY8Um19MsnLharmS+nWGWO89fsA=",
@@ -499,7 +494,7 @@
         "determinate": "determinate",
         "flake-utils": "flake-utils",
         "git-ai": "git-ai",
-        "gws-cli": "gws-cli",
+        "gws-cli-src": "gws-cli-src",
         "home-manager": "home-manager",
         "homebrew-awslim": "homebrew-awslim",
         "homebrew-cask": "homebrew-cask",
