@@ -41,9 +41,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
+    # Secret management: agenix (see docs/adr/0004-secrets-via-agenix.md).
+    # The dormant sops-nix scaffold was removed (ADR-0004).
+    agenix = {
+      url = "github:ryantm/agenix";
+      # Pin agenix's inputs to ours (nixpkgs, darwin, home-manager)
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+      inputs.darwin.follows = "darwin";
     };
 
     darwin = {
@@ -72,7 +77,7 @@
       nixpkgs-stable,
       nixpkgs-26_05, # <-- Inject the pinned input here
       darwin,
-      sops-nix,
+      agenix,
       flake-utils,
       home-manager,
       nix-homebrew,
