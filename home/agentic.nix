@@ -265,7 +265,7 @@ in
   home.packages = [
     # FIXME uses postgresql test which is unsupported for darwin
     #pkgs.open-webui
-    # Ggogle
+    # Google
     pkgs.antigravity-cli
     # PI
     # https://pi.dev, https://github.com/badlogic/pi-mono/, https://lucumr.pocoo.org/2026/1/31/pi/
@@ -288,4 +288,22 @@ in
     # FIXME broken 2026-01-26
     # crush
   ];
+
+  # AgentsView - local web viewer for AI agent sessions
+  # https://github.com/kenn-io/agentsview (installed via Nix release binary,
+  # config.toml generated declaratively, no Docker/homebrew involved)
+  programs.agentsview = {
+    enable = true;
+    launchd.enable = true;
+
+    # Example per-agent overrides (see https://agentsview.io/configuration/):
+    # agentDirs = {
+    #   aider = [ "~/code" ];
+    #   claude = [ "~/.claude/projects" ];
+    # };
+    # disabledAgents = [ "gemini" ];
+
+    # Freeform TOML pass-through for tables like [pg], [duckdb], [vector]:
+    # settings.pg.url = "postgres://user:pass@work-db/agentsview";
+  };
 }
