@@ -1,0 +1,5 @@
+# AgentsView configuration - version-controlled copy.
+# Source of truth synced from ~/.agentsview/config.toml via
+# 'make sync-config-agentsview' (docs/adr/0003-agentsview-config-sync-back.md).
+# Secret keys (auth_token, cursor_secret, ...) are intentionally omitted;
+# the daemon regenerates them at runtime. Secrets belong in agenix (ADR-0004).

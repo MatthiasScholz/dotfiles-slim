@@ -130,6 +130,20 @@ in
   options.programs.agentsview = {
     enable = lib.mkEnableOption "AgentsView, the local web viewer for AI agent sessions";
 
+    # The version-controlled config.toml installed verbatim. Synced back from
+    # the live file via `make sync-config-agentsview` (ADR-0003). Set to null
+    # to fall back to generating the file from settings instead.
+    configFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = ../config/agentsview/config.toml;
+      defaultText = lib.literalMD "`config/agentsview/config.toml` (version-controlled)";
+      description = ''
+        Config file installed verbatim to ~/.agentsview/config.toml.
+        While the file does not exist yet (before the first
+        `make sync-config-agentsview`), it is left to the daemon to create.
+      '';
+    };
+
     version = lib.mkOption {
       type = lib.types.str;
       default = "0.43.0";
@@ -346,13 +360,24 @@ in
 
     home.packages = [ cfg.package ];
 
-    # Only manage the config file when there is something to manage. An empty
-    # TOML would clobber the file the daemon auto-creates (and the secrets in
-    # it) without adding any value.
+    # Install the version-controlled config.toml verbatim when it exists
+    # (single source of truth per ADR-0003). Falls back to the generated
+    # file only if `configFile` was explicitly set to null and settings are
+    # present. While the VCS file does not exist yet, the daemon's
+    # auto-created file is left untouched so first-run secrets survive.
+    warnings = lib.optionals (
+      cfg.configFile != null && ! builtins.pathExists cfg.configFile
+    ) [
+      "agentsview: ${toString cfg.configFile} does not exist yet — run `make sync-config-agentsview` to bootstrap it; ~/.agentsview/config.toml stays daemon-managed until then"
+    ];
+
     home.file.".agentsview/config.toml" =
-      lib.mkIf (settingsRendered != { }) {
-        source = (pkgs.formats.toml { }).generate "agentsview-config.toml" settingsRendered;
-      };
+      if cfg.configFile != null then
+        lib.mkIf (builtins.pathExists cfg.configFile) { source = cfg.configFile; }
+      else
+        lib.mkIf (settingsRendered != { }) {
+          source = (pkgs.formats.toml { }).generate "agentsview-config.toml" settingsRendered;
+        };
 
     home.sessionVariables = lib.mkMerge [
       (lib.mkIf (!cfg.telemetry.enable) { AGENTSVIEW_TELEMETRY_ENABLED = "0"; })

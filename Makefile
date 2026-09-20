@@ -9,6 +9,11 @@ update:
 	nix flake update
 	./scripts/update-opencode-plugin-versions.sh
 
+# AgentsView: copy the live ~/.agentsview/config.toml over the version-controlled
+# copy, then review the git diff (docs/adr/0003-agentsview-config-sync-back.md)
+sync-config-agentsview:
+	./scripts/sync-config-agentsview.sh
+
 update-nixd:
 	sudo determinate-nixd upgrade
 
