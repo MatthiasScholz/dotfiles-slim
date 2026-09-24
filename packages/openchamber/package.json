@@ -1,0 +1,10 @@
+{
+  "name": "openchamber",
+  "version": "2.0.0",
+  "description": "Dependency manifest for the @openchamber/web CLI, packaged in default.nix",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@openchamber/web": "2.0.0"
+  }
+}

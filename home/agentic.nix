@@ -117,6 +117,7 @@ in
   imports = [
     ../modules/ocx-module.nix
     ../modules/oh-my-opencode-slim.nix
+    ../modules/openchamber.nix
     #../modules/oh-my-openagent.nix
   ];
 
@@ -305,5 +306,38 @@ in
 
     # Freeform TOML pass-through for tables like [pg], [duckdb], [vector]:
     # settings.pg.url = "postgres://user:pass@work-db/agentsview";
+  };
+
+  # OpenChamber - agentic development environment on top of OpenCode
+  # https://github.com/openchamber/openchamber (CLI/Web installed from the
+  # published @openchamber/web npm package; drives the programs.opencode above)
+  # Runs as a launchd LaunchAgent, the declarative equivalent of upstream's
+  # `openchamber startup enable`.
+  #
+  # Bound to 0.0.0.0 so other devices on the LAN (desktop/mobile/PWA) can reach
+  # it, which OpenChamber only allows with UI auth — hence the agenix password
+  # below (ADR-0004). The agenix CLI defaults to ~/.ssh/id_rsa|id_ed25519, so
+  # pass the repo's age key explicitly (secrets.nix holds the recipients):
+  #   read:   make openchamber-password
+  #   rotate: agenix -e secrets/openchamber-web.age -i ~/.config/sops/age/keys.txt
+  # The decrypted copy is also at ~/.agenix/openchamber-web after a switch.
+  age.secrets."openchamber-web" = {
+    file = ../secrets/openchamber-web.age;
+    path = "${config.home.homeDirectory}/.agenix/openchamber-web";
+  };
+
+  programs.openchamber = {
+    enable = true;
+    port = 3000;
+    launchd.enable = true;
+    host = "0.0.0.0";
+    uiPasswordFile = config.age.secrets."openchamber-web".path;
+
+    # Headless API-only server (no browser UI assets):
+    # apiOnly = true;
+
+    # Attach to an OpenCode server you already run instead of a managed one:
+    # environment.OPENCODE_HOST = "http://localhost:4096";
+    # environment.OPENCODE_SKIP_START = "true";
   };
 }

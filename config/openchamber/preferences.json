@@ -1,0 +1,172 @@
+{
+  "fields": {
+    "allowPromptingSubagentSessions": {
+      "updatedAt": 1790276321742,
+      "value": true
+    },
+    "chatRenderMode": {
+      "updatedAt": 1790276281352,
+      "value": "sorted"
+    },
+    "collapsedModelProviders": {
+      "updatedAt": 1790276080709,
+      "value": []
+    },
+    "darkThemeId": {
+      "updatedAt": 1790274600535,
+      "value": "openchamber-dark"
+    },
+    "defaultAgent": {
+      "updatedAt": 1790276419410,
+      "value": "orchestrator"
+    },
+    "defaultModel": {
+      "updatedAt": 1790276414218,
+      "value": "opencode-go/deepseek-v4.1-flash"
+    },
+    "defaultVariant": {
+      "updatedAt": 1790276416675,
+      "value": "high"
+    },
+    "diffLayoutPreference": {
+      "updatedAt": 1790276260337,
+      "value": "dynamic"
+    },
+    "favoriteModels": {
+      "updatedAt": 1790276097115,
+      "value": [
+        {
+          "modelID": "glm-5.3-flash",
+          "providerID": "opencode-go"
+        },
+        {
+          "modelID": "deepseek-v4.1-flash",
+          "providerID": "opencode-go"
+        }
+      ]
+    },
+    "gitChangesViewMode": {
+      "updatedAt": 1790276781962,
+      "value": "tree"
+    },
+    "gitmojiEnabled": {
+      "updatedAt": 1790276784176,
+      "value": true
+    },
+    "hiddenModels": {
+      "updatedAt": 1790276080709,
+      "value": []
+    },
+    "inputSpellcheckEnabled": {
+      "updatedAt": 1790276372080,
+      "value": true
+    },
+    "lightThemeId": {
+      "updatedAt": 1790274600535,
+      "value": "openchamber-light"
+    },
+    "nativeNotificationsEnabled": {
+      "updatedAt": 1790276386078,
+      "value": true
+    },
+    "notificationTemplates": {
+      "updatedAt": 1790274600535,
+      "value": {
+        "completion": {
+          "message": "{model_name} completed the task",
+          "title": "{agent_name} is ready"
+        },
+        "error": {
+          "message": "{last_message}",
+          "title": "Tool error"
+        },
+        "question": {
+          "message": "{last_message}",
+          "title": "Input needed"
+        },
+        "subtask": {
+          "message": "{model_name} completed the task",
+          "title": "{agent_name} is ready"
+        }
+      }
+    },
+    "notifyOnCompletion": {
+      "updatedAt": 1790274600535,
+      "value": true
+    },
+    "notifyOnError": {
+      "updatedAt": 1790274600535,
+      "value": true
+    },
+    "notifyOnQuestion": {
+      "updatedAt": 1790274600535,
+      "value": true
+    },
+    "notifyOnSubtasks": {
+      "updatedAt": 1790274600535,
+      "value": true
+    },
+    "recentAgents": {
+      "updatedAt": 1790276080709,
+      "value": []
+    },
+    "recentEfforts": {
+      "updatedAt": 1790277294881,
+      "value": {
+        "opencode-go/deepseek-v4.1-flash": [
+          "high"
+        ]
+      }
+    },
+    "recentModels": {
+      "updatedAt": 1790277880463,
+      "value": [
+        {
+          "modelID": "~deepseek/deepseek-flash-latest",
+          "providerID": "openrouter"
+        },
+        {
+          "modelID": "google/gemini-3.8-flash",
+          "providerID": "openrouter"
+        },
+        {
+          "modelID": "glm-5.3-flash",
+          "providerID": "opencode-go"
+        },
+        {
+          "modelID": "z-ai/glm-5.3-flash",
+          "providerID": "openrouter"
+        },
+        {
+          "modelID": "deepseek-v4.1-flash",
+          "providerID": "opencode-go"
+        }
+      ]
+    },
+    "sessionGoalDefaultBudgetEnabled": {
+      "updatedAt": 1790276324312,
+      "value": false
+    },
+    "sessionTabsEnabled": {
+      "updatedAt": 1790276213343,
+      "value": true
+    },
+    "showReasoningTraces": {
+      "updatedAt": 1790276331356,
+      "value": true
+    },
+    "showSplitAssistantMessageActions": {
+      "updatedAt": 1790276358609,
+      "value": true
+    },
+    "showTurnChangedFiles": {
+      "updatedAt": 1790276366328,
+      "value": true
+    },
+    "workStatusPanelEnabled": {
+      "updatedAt": 1790277095141,
+      "value": true
+    }
+  },
+  "version": 1
+}

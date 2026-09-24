@@ -14,6 +14,17 @@ update:
 sync-config-agentsview:
 	./scripts/sync-config-agentsview.sh
 
+# OpenChamber: copy the live ~/.config/openchamber/preferences.json over the
+# version-controlled copy, then review the git diff (modules/openchamber.nix)
+sync-config-openchamber:
+	./scripts/sync-config-openchamber.sh
+
+# OpenChamber: print the UI password from the agenix secret. The age key is
+# passed explicitly because the agenix CLI defaults to ~/.ssh/id_rsa|id_ed25519.
+# Pipe to pbcopy to paste it on another device: make openchamber-password | pbcopy
+openchamber-password:
+	@agenix -d secrets/openchamber-web.age -i "$(HOME)/.config/sops/age/keys.txt" && echo
+
 update-nixd:
 	sudo determinate-nixd upgrade
 
