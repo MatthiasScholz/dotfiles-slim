@@ -71,6 +71,49 @@ There is no granular unit test suite for individual functions.
 - **Globals**: Avoid global variables unless necessary for the specific tool (e.g., Hammerspoon `spoon` global).
 - **Modules**: Require modules at the top of the file.
 
+### Commit Messages (gitmoji + Conventional Commits)
+Every commit subject combines a **[gitmoji](https://gitmoji.dev/)** with a
+**Conventional Commits** type:
+
+```text
+<gitmoji> <type>(<scope>): <summary>
+```
+
+- **gitmoji**: the unicode emoji, not the `:shortcode:` form (e.g. `✨`, not
+  `:sparkles:`). Match the emoji already used in this history.
+- **type**: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `chore`,
+  `build`, `ci`, `style`.
+- **scope**: short noun for the affected area (`openchamber`, `darwin`,
+  `kanata`, `secret management`, ...). Optional, but preferred.
+- **summary**: imperative mood, no trailing period, subject line <= 72 chars.
+- **body**: optional, separated from the subject by a blank line; explain *why*
+  rather than *what*, wrapped at ~72 columns.
+- Do not add sign-off footers (`Signed-off-by`) or `BREAKING CHANGE` markers.
+
+| type | gitmoji | use for |
+|------|---------|---------|
+| `feat` | ✨ | new feature / capability |
+| `fix` | 🐛 | bug fix |
+| `docs` | 📝 | documentation |
+| `refactor` | ♻ | refactor without behaviour change |
+| `perf` | ⚡ | performance |
+| `test` | ✅ | tests |
+| `chore` | 🔧 | tooling, maintenance |
+| `build` | 📦 | build / packaging |
+| `ci` | 👷 | CI |
+| `style` | 💄 | formatting / UI only |
+
+Extra gitmojis in use, paired with the closest type: `⬆ chore(deps)` for a
+dependency upgrade, `👽` for upstream/platform changes, `💩` for a pragmatic
+known-bad workaround.
+
+```text
+✨ feat(openchamber): add module, launchd service and config sync
+🐛 fix(kanata): keep the tray alive after an upgrade
+📝 docs(agents): require gitmoji + Conventional Commits
+⬆ chore(deps): update flake inputs
+```
+
 ### Error Handling
 - **Nix**: Fail early. If a configuration is invalid, `nix flake check` should catch it.
 - **Darwin**: Be aware that `darwin-rebuild` requires `sudo`.
