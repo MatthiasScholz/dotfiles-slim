@@ -55,12 +55,13 @@ Split the process into three cooperating parts, all reconciled by
    privileged helper for lifecycle control (see below). TCC permissions
    (Input Monitoring + Accessibility) are granted **once** to
    `/usr/local/bin/kanata`.
-2. **Stable real-file copy at `/usr/local/bin/kanata`** (activation script;
-   absolute rule: *copy, never symlink* — TCC resolves symlinks). The copy is
-   refreshed on every switch from `${pkgs.kanata-with-cmd}`, so version
-   updates flow through; the path never changes, so the TCC grant survives
-   every `nix flake update` + `make setup` cycle. Only a kanata *version*
-   bump may require re-granting (macOS sometimes re-pins to the binary).
+2. **Stable real-file copy at `/usr/local/bin/kanata`, re-signed with a stable
+   identity** (activation script; absolute rule: *copy, never symlink* — TCC
+   resolves symlinks). TCC pins an ad-hoc binary's grant to its cdhash, which
+   changes on every rebuild, so the copy is signed with the machine-local
+   `kanata-tcc` identity; TCC then stores a content-independent requirement and
+   the copy can be refreshed every switch. See **ADR-0006** for the full
+   decision, the one-time grant, and the rejected alternatives.
 3. **Tray lifecycle twin** — because kanata-tray must own a child process and
    that child must run as the user, the tray runs a **shim**
    (`/usr/local/bin/kanata-tray-shim`) instead of kanata itself:
@@ -130,15 +131,19 @@ flowchart TB
 
 ## Consequences
 
-- **Update-proof by construction**: every version /
-  hash-sensitivity is confined inside the flake; the TCC-relevant path
-  (`/usr/local/bin/kanata`) and the shim/helper paths are constants. The
-  previous class of breakage — "works until the next nix update" —
-  cannot recur.
-- **One manual step remains**, by macOS design (root daemons cannot receive
-  TCC prompts): granting Input Monitoring + Accessibility to
-  `/usr/local/bin/kanata` once in System Settings. After a kanata *version*
-  bump macOS may again pin to the original binary — remove/re-add once.
+- **Update-proof via stable signing (ADR-0006)**: the TCC-relevant path and
+  the shim/helper paths are constants, and `/usr/local/bin/kanata` is
+  re-copied and re-signed with the stable `kanata-tcc` identity on every
+  switch. TCC stores a content-independent requirement, so the Input
+  Monitoring / Accessibility grants survive `nix flake update` + `make setup`.
+  The original "stable copy alone" claim was wrong: an ad-hoc binary's grant is
+  pinned to its cdhash, which changes whenever nixpkgs rebuilds kanata (even at
+  the same version) — the recurring breakage.
+- **One manual step: the initial grant.** Moving onto the signed binary needs
+  one remove/re-add of `/usr/local/bin/kanata` in Input Monitoring +
+  Accessibility. Root daemons cannot be shown a TCC prompt, and the grant
+  cannot be migrated programmatically (SIP keeps `TCC.db` read-only; `tccutil`
+  cannot target a path client). Afterwards it is decoupled from switches.
 - **Icon accuracy**: the tray's state machine watches the shim, which watches
   the daemon's TCP port; short TCP outages (≤ ~5 s, e.g. a live reload) are
   tolerated so the icon does not flicker to "crashed".
@@ -151,10 +156,24 @@ flowchart TB
   shim start (`kickstart`) or reboot. Accepted, because the plist itself
   stays content-stable (no store hashes embedded), which also prevents
   nix-darwin from noisily restarting the remapping daemon mid-session.
-- **Fragile when macOS hardens**: if TCC starts refusing path-pinned grants
-  for ad-hoc-signed binaries or processes at stable copy paths, the fallback
-  would be a stable code-signing identity (self-signed code-signing cert +
-  `codesign` in the activation) — not needed as of writing.
+- **If zero-touch signing ever needs a system-managed root of trust** (many
+  machines): a real Apple Developer ID can replace the self-signed identity.
+  Seeding `TCC.db` was proven impossible: SIP keeps it read-only even with Full
+  Disk Access.
+
+## Amendment — 2026-10-05: stable code signing adopted (see ADR-0006)
+
+The original design assumed a stable-path *copy* alone would keep the TCC
+grant. After a `nix flake update` + switch the tray went to "crash" again:
+the copied binary's ad-hoc cdhash had changed (same kanata 1.12.0, newer
+nixpkgs), while TCC still pinned the old `cdhash H"290369c7…"`.
+
+An interim "install only when missing" freeze avoided the breakage but left the
+binary silently stale. **ADR-0006** replaced it with a stable self-signed
+code-signing identity (`kanata-tcc`): the copy is refreshed and re-signed on
+every switch, and TCC's requirement becomes content-independent. The only cost
+is a one-time manual re-grant, which could not be automated because `TCC.db` is
+SIP-read-only and `tccutil` cannot target a path-based client.
 
 ## Alternatives considered (and rejected)
 
@@ -173,5 +192,9 @@ flowchart TB
 - Karabiner-DriverKit-VirtualHIDDevice (root-only IPC socket): <https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice>
 - Implementation: `darwin/darwin.nix` (activation script, `launchd.daemons.kanata`,
   `launchd.user.agents.kanata-tray`), `config/kanata/kanata-tray.toml`
+- ADR-0006 — stable code-signed kanata copy (supersedes this ADR's binary
+  installation detail)
+- Operator runbook (health checks, TCC re-grant, file sizes):
+  [`docs/troubleshooting.md`](../troubleshooting.md)
 - Related: ADR-0001 — same theme of reconciling imperative tooling
   (installer/wrapper hacks) into a declarative Nix module.
