@@ -45,10 +45,9 @@
     # The dormant sops-nix scaffold was removed (ADR-0004).
     agenix = {
       url = "github:ryantm/agenix";
-      # Pin agenix's inputs to ours (nixpkgs, darwin, home-manager)
+      # Upstream agenix only declares a nixpkgs input; it ships darwin/HM
+      # modules without depending on those flakes. Pin the one input it has.
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-      inputs.darwin.follows = "darwin";
     };
 
     darwin = {
@@ -138,6 +137,14 @@
             {
               home-manager = {
                 backupFileExtension = "bak";
+                # Files such as ~/.config/openchamber/preferences.json and
+                # ~/.config/opencode/profiles/*/tui.json are rewritten by their
+                # tools at runtime, so each switch backs up the previous live
+                # file to "*.bak". Without this, a leftover "*.bak" from an
+                # earlier switch makes activation abort with "would be
+                # clobbered". Overwrite the stale backup instead (run the
+                # matching `make sync-config-*` first to keep live changes).
+                overwriteBackup = true;
                 # Because we explicitly defined nixpkgs.pkgs above, Home Manager
                 # will automatically inherit it via useGlobalPkgs!
                 useGlobalPkgs = true;

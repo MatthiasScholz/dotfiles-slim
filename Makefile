@@ -25,6 +25,11 @@ sync-config-openchamber:
 openchamber-password:
 	@agenix -d secrets/openchamber-web.age -i "$(HOME)/.config/sops/age/keys.txt" && echo
 
+# nix-darwin activation needs root, but plain `sudo` inherits the invoking
+# user's HOME, so Nix warns "$HOME ('/Users/matthias') is not owned by you"
+# and falls back to /var/root. -H (--set-home) points HOME at root up front.
+SUDO ?= sudo -H
+
 update-nixd:
 	sudo determinate-nixd upgrade
 
@@ -47,10 +52,10 @@ diff:
 update-diff: update build diff
 
 switch:
-	sudo nix run nix-darwin -- switch --show-trace --flake ~/projects/config/dotfiles-slim
+	$(SUDO) nix run nix-darwin -- switch --show-trace --flake ~/projects/config/dotfiles-slim
 
 setup:
-	sudo nix run nix-darwin -- switch --flake . --refresh
+	$(SUDO) nix run nix-darwin -- switch --flake . --refresh
 
 rollback:
 	/run/current-system/sw/bin/darwin-rebuild switch --rollback
