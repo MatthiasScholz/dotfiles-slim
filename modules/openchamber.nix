@@ -21,6 +21,17 @@
 # keys OpenChamber writes when a setting changes in the UI. Those UI changes
 # are lost on the next switch unless they are copied back first, which is what
 # `make sync-config-openchamber` does (same git-review flow as ADR-0003).
+#
+# `desktopClient` configures the *separately installed* desktop app (Homebrew
+# cask `openchamber`, see darwin/darwin.nix) to attach to this server instead of
+# starting its own embedded one. It exports OPENCHAMBER_SKIP_LOCAL_SERVER and
+# OPENCHAMBER_SERVER_URL as session variables, which the desktop app picks up
+# through its login-shell probe. The app itself is not installed here — see
+# docs/adr/0008-openchamber-desktop-client.md.
+#
+# `opencodePasswordFile` supplies OPENCODE_SERVER_PASSWORD to the LaunchAgent so
+# it can authenticate to an external OpenCode v2 server in OPENCODE_SKIP_START
+# mode — see docs/adr/0009-opencode-v2-from-npm.md.
 {
   config,
   lib,
@@ -69,31 +80,51 @@ let
   ++ lib.optionals cfg.apiOnly [ "--api-only" ]
   ++ cfg.extraArgs;
 
-  # launchd cannot expand files into `EnvironmentVariables`, so when the UI
-  # password lives in a file we wrap the binary and read it at service start.
-  # Only the file path ends up in the Nix store, never the secret itself.
+  # launchd cannot expand files into `EnvironmentVariables`, so when secrets
+  # live in files we wrap the binary and read them at service start. Only the
+  # file paths end up in the Nix store, never the secrets themselves.
   #
-  # agenix decrypts secrets from its own LaunchAgent at login, so the file can
-  # briefly be missing/dangling; wait (bounded) before starting — a
-  # network-exposed server without its password refuses to start anyway.
+  # - `uiPasswordFile` sets OPENCHAMBER_UI_PASSWORD (the browser login).
+  # - `opencodePasswordFile` is a shell `export OPENCODE_SERVER_PASSWORD=...`
+  #   line, sourced so OpenChamber can authenticate to an external OpenCode v2
+  #   server in OPENCODE_SKIP_START mode.
+  #
+  # agenix decrypts secrets from its own LaunchAgent at login, so the files can
+  # briefly be missing/dangling; wait (bounded) before starting.
   launchdExec =
-    if cfg.uiPasswordFile == null then
+    if cfg.uiPasswordFile == null && cfg.opencodePasswordFile == null then
       lib.getExe cfg.package
     else
       toString (
         pkgs.writeShellScript "openchamber-launchd" ''
-          secret="${toString cfg.uiPasswordFile}"
-          i=0
-          while [ ! -r "$secret" ] && [ "$i" -lt 60 ]; do
-            sleep 1
-            i=$((i + 1))
-          done
-          if [ -r "$secret" ]; then
-            OPENCHAMBER_UI_PASSWORD="$(cat "$secret")"
-            export OPENCHAMBER_UI_PASSWORD
-          else
-            echo "openchamber-launchd: $secret not readable after 60s; starting without UI password" >&2
-          fi
+          ${lib.optionalString (cfg.uiPasswordFile != null) ''
+            secret="${toString cfg.uiPasswordFile}"
+            i=0
+            while [ ! -r "$secret" ] && [ "$i" -lt 60 ]; do
+              sleep 1
+              i=$((i + 1))
+            done
+            if [ -r "$secret" ]; then
+              OPENCHAMBER_UI_PASSWORD="$(cat "$secret")"
+              export OPENCHAMBER_UI_PASSWORD
+            else
+              echo "openchamber-launchd: $secret not readable after 60s; starting without UI password" >&2
+            fi
+          ''}
+          ${lib.optionalString (cfg.opencodePasswordFile != null) ''
+            opencode_secret="${toString cfg.opencodePasswordFile}"
+            i=0
+            while [ ! -r "$opencode_secret" ] && [ "$i" -lt 60 ]; do
+              sleep 1
+              i=$((i + 1))
+            done
+            if [ -r "$opencode_secret" ]; then
+              # shellcheck disable=SC1090
+              . "$opencode_secret"
+            else
+              echo "openchamber-launchd: $opencode_secret not readable after 60s; external OpenCode auth will fail" >&2
+            fi
+          ''}
           exec ${lib.getExe cfg.package} "$@"
         ''
       );
@@ -124,6 +155,22 @@ let
   // lib.optionalAttrs (cfg.dataDir != null) { OPENCHAMBER_DATA_DIR = toString cfg.dataDir; }
   // opencodeBinary
   // cfg.environment;
+
+  # URL the separately installed desktop app attaches to (ADR-0008). The server
+  # binds `host` (often a wildcard such as 0.0.0.0), but a client on the same
+  # machine reaches it over loopback, so the wildcard/any addresses are mapped.
+  desktopServerUrl =
+    if cfg.desktopClient.serverUrl != null then
+      cfg.desktopClient.serverUrl
+    else
+      "http://${
+        if cfg.host == "0.0.0.0" then
+          "127.0.0.1"
+        else if cfg.host == "::1" then
+          "[::1]"
+        else
+          cfg.host
+      }:${toString cfg.port}";
 
   # `OPENCHAMBER_HOST` is deliberately service-only: exporting a non-loopback
   # host to the interactive shell would make a bare `openchamber` refuse to
@@ -189,6 +236,20 @@ in
       '';
     };
 
+    opencodePasswordFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      example = lib.literalExpression "config.age.secrets.opencode-server.path";
+      description = ''
+        File with an `export OPENCODE_SERVER_PASSWORD=...` line for the external
+        OpenCode v2 server this module attaches to via `OPENCODE_HOST`. The
+        LaunchAgent wrapper sources it, so only the file path reaches the store
+        — never the secret. Only meaningful in `OPENCODE_SKIP_START` mode; when
+        OpenChamber manages OpenCode it generates and keeps its own password.
+        See docs/adr/0009-opencode-v2-from-npm.md.
+      '';
+    };
+
     dataDir = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -237,6 +298,27 @@ in
         NOTE values are written to the Nix store/world-readable files; use
         `uiPasswordFile` for secrets.
       '';
+    };
+
+    desktopClient = {
+      enable = lib.mkEnableOption ''
+        Client mode for the separately installed OpenChamber desktop app. When
+        enabled, this server keeps its port and data directory and the desktop
+        app attaches here (loading its bundled UI and talking to this server's
+        API) instead of starting its own embedded server. See
+        docs/adr/0008-openchamber-desktop-client.md.
+      '';
+
+      serverUrl = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        defaultText = lib.literalExpression "http://<host>:<port> derived from `host`/`port`";
+        example = "http://127.0.0.1:3000";
+        description = ''
+          URL the desktop app connects to. Defaults to this server's own
+          address (`127.0.0.1` when bound to `0.0.0.0`, otherwise `host`).
+        '';
+      };
     };
 
     launchd.enable = lib.mkOption {
@@ -298,7 +380,13 @@ in
           source = cfg.configFile;
         };
 
-    home.sessionVariables = sessionEnvironment;
+    # Desktop-client variables are session-only. They are read exclusively by
+    # the Electron desktop app (never by the CLI/server), so they must not leak
+    # into the LaunchAgent environment or anything the server spawns.
+    home.sessionVariables = sessionEnvironment // lib.optionalAttrs cfg.desktopClient.enable {
+      OPENCHAMBER_SKIP_LOCAL_SERVER = "1";
+      OPENCHAMBER_SERVER_URL = desktopServerUrl;
+    };
 
     # launchd opens the log files before the process starts, so make sure the
     # directory exists even on a machine that has never run OpenChamber.

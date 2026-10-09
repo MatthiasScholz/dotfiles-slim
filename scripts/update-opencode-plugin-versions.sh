@@ -15,8 +15,6 @@ trap 'rm -f "$TMP_FILE"' EXIT
 # Managed plugins; keep in sync with the modules that consume the versions file.
 PLUGINS="
   oh-my-opencode-slim
-  oh-my-openagent
-  @mohak34/opencode-notifier
   opencode-gemini-auth
   opencode-nanobanana
   opencode-mem

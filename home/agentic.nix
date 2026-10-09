@@ -40,55 +40,41 @@ in
   programs.opencode = {
     enable = true;
 
-    # Dynamically select the package based on architecture
-    # package =
-    # if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then
-    #   inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default
-    #   else
-    #     let
-    #       appVersion = "1.1.48";
-    #     in
-    #     # The fallback derivation for your Intel Mac Pro
-    #     pkgs.stdenv.mkDerivation {
-    #       pname = "opencode-baseline";
-    #       # FIXME broken baseline version = "1.14.33";
-    #       version = appVersion;
-
-    #       src = pkgs.fetchzip {
-    #         # FIXME broken baseline version
-    #         # url =
-    #         #  "https://github.com/anomalyco/opencode/releases/download/"
-    #         #  + "v${version}/opencode-darwin-x64-baseline.zip";
-    #         # hash = "sha256-Ux4jwHAWC2A3UDGIiu3cofjAqOAzUOLZl6zWYj6L5SY=";
-    #         url =
-    #           "https://github.com/anomalyco/opencode/releases/download/"
-    #           + "v${appVersion}/opencode-darwin-x64.zip";
-    #         # hash = pkgs.lib.fakeHash;
-    #         hash = "sha256-WQERmuHfs4s8mmYCW7te8sWHEh9u8R0WkVvaErr2ZQA";
-    #       };
-
-    #       installPhase = ''
-    #         mkdir -p $out/bin
-    #         # Copy the extracted binary into the Nix store bin directory
-    #         cp opencode $out/bin/opencode
-    #         chmod +x $out/bin/opencode
-    #       '';
-
-    #       meta = {
-    #         mainProgram = "opencode";
-    #         description = "OpenCode AI agent";
-    #       };
-    #     };
+    # OpenCode v2. nixpkgs `pkgs.opencode` still tracks the 1.x line, whose
+    # server API OpenChamber v2 rejects. packages/opencode packages the
+    # published @opencode/cli v2 artifact (per-arch hashes inside). See
+    # docs/adr/0009-opencode-v2-from-npm.md.
+    package = pkgs.callPackage ../packages/opencode { };
 
     web = {
       enable = true;
+      # NOTE v2 `serve` has no `--mdns` flag (v1 did); the LAN/mDNS discovery
+      # moved to the background `service` subsystem.
       extraArgs = [
         "--hostname"
         "0.0.0.0"
         "--port"
         "4096"
-        "--mdns"
       ];
+      # OpenCode v2 requires a server password. The agenix secret holds
+      # `export OPENCODE_SERVER_PASSWORD=...`. Home Manager's darwin launchd
+      # wrapper only `source`s the environment file — it does not wait for
+      # agenix to decrypt it — so on a cold login the server could start
+      # without the password. Point it at a generated shim that waits (bounded)
+      # and then sources the real secret. NOTE darwin-only: on Linux systemd
+      # would try to parse this as a KEY=VALUE EnvironmentFile.
+      environmentFile = pkgs.writeShellScript "opencode-server-env" ''
+        secret="${config.age.secrets."opencode-server".path}"
+        i=0
+        while [ ! -r "$secret" ] && [ "$i" -lt 60 ]; do
+          sleep 1
+          i=$((i + 1))
+        done
+        if [ -r "$secret" ]; then
+          # shellcheck disable=SC1090
+          . "$secret"
+        fi
+      '';
     };
 
     enableMcpIntegration = true;
@@ -97,7 +83,6 @@ in
       autoupdate = false;
       plugin = [
         # Pinned versions (updated via make update -> scripts/update-opencode-plugin-versions.sh)
-        "@mohak34/opencode-notifier@${pluginVersions."@mohak34/opencode-notifier"}"
         "opencode-gemini-auth@${pluginVersions."opencode-gemini-auth"}"
         #"opencode-nanobanana@${pluginVersions."opencode-nanobanana"}"
         "opencode-mem@${pluginVersions."opencode-mem"}"
@@ -118,7 +103,6 @@ in
     ../modules/ocx-module.nix
     ../modules/oh-my-opencode-slim.nix
     ../modules/openchamber.nix
-    #../modules/oh-my-openagent.nix
   ];
 
   # Enable it globally with a single flag
@@ -135,127 +119,6 @@ in
     # Optional: enable companion desktop window
     companion = false;
   };
-
-  /*
-    # oh-my-openagent orchestration plugin in the dedicated "omo" profile
-    programs.ohMyOpenagent = {
-      enable = true;
-      profile = "omo"; # Profile name (omo, personal, work, etc.)
-      # plugins default to pinned "[oh-my-openagent@<version>]" from the versions file
-
-      # Agent model configuration (mirrors oh-my-openagent.jsonc)
-      agents = {
-        # Sisyphus (Main Orchestrator): Requires heavy reasoning and autonomous execution.
-        sisyphus = {
-          model = "opencode/nemotron-3-ultra";
-          variant = "max";
-          fallback_models = [
-            "opencode/laguna-s-2.1"
-            "opencode/big-pickle"
-          ];
-        };
-        # Oracle (Architecture Consultant): Needs high-IQ architecture decisions.
-        oracle = {
-          model = "opencode/nemotron-3-ultra";
-          variant = "high";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-        # Librarian (Documentation Search): Needs long context and speed.
-        librarian = {
-          model = "opencode/ling-3.0-flash";
-          fallback_models = [
-            "opencode/deepseek-v4-flash"
-            "opencode/north-mini-code"
-          ];
-        };
-        # Explore (Fast Codebase Grep): Optimized for rapid pattern discovery.
-        explore = {
-          model = "opencode/deepseek-v4-flash";
-          fallback_models = [
-            "opencode/north-mini-code"
-            "opencode/ling-3.0-flash"
-          ];
-        };
-        # Multimodal Looker (Vision): Requires screenshot and UI analysis.
-        "multimodal-looker" = {
-          model = "opencode/mimo-v2.5";
-          fallback_models = [ "opencode/nemotron-3-ultra" ];
-        };
-        # Prometheus (Strategic Planner): Inherits heavy reasoning from Sisyphus.
-        prometheus = {
-          model = "opencode/nemotron-3-ultra";
-          variant = "max";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-        # Metis (Gap Analyzer): Needs strict instruction-following to catch blind spots.
-        metis = {
-          model = "opencode/laguna-s-2.1";
-          variant = "max";
-          fallback_models = [ "opencode/nemotron-3-ultra" ];
-        };
-        # Momus (Ruthless Reviewer): Validates plans against context criteria.
-        momus = {
-          model = "opencode/laguna-s-2.1";
-          variant = "max";
-          fallback_models = [ "opencode/nemotron-3-ultra" ];
-        };
-        # Atlas (Execution Conductor): Distributes tasks based on plans.
-        atlas = {
-          model = "opencode/nemotron-3-ultra";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-      };
-
-      # Category model configuration
-      categories = {
-        # UI/Frontend Tasks
-        "visual-engineering" = {
-          model = "opencode/mimo-v2.5";
-          variant = "high";
-          fallback_models = [ "opencode/nemotron-3-ultra" ];
-        };
-        # Hard Logic and Architecture
-        ultrabrain = {
-          model = "opencode/nemotron-3-ultra";
-          variant = "high";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-        # Creative/Unconventional Tasks
-        artistry = {
-          model = "opencode/big-pickle";
-          variant = "high";
-          fallback_models = [ "opencode/nemotron-3-ultra" ];
-        };
-        # Trivial/Fast Tasks
-        quick = {
-          model = "opencode/north-mini-code";
-          fallback_models = [
-            "opencode/deepseek-v4-flash"
-            "opencode/ling-3.0-flash"
-          ];
-        };
-        # Light Fallback Category
-        "unspecified-low" = {
-          model = "opencode/deepseek-v4-flash";
-          fallback_models = [ "opencode/north-mini-code" ];
-        };
-        # High-Effort Fallback Category
-        "unspecified-high" = {
-          model = "opencode/nemotron-3-ultra";
-          variant = "max";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-        # Prose and Documentation
-        writing = {
-          model = "opencode/ling-3.0-flash";
-          fallback_models = [ "opencode/laguna-s-2.1" ];
-        };
-      };
-
-      # Optional: enable companion desktop window
-      companion = false;
-    };
-  */
 
   # Optional: Pre-define your favorite registries globally
   xdg.configFile."ocx/ocx.jsonc".text = builtins.toJSON {
@@ -326,6 +189,14 @@ in
     path = "${config.home.homeDirectory}/.agenix/openchamber-web";
   };
 
+  # Shared OpenCode v2 server password (see ADR-0009): read by the OpenCode
+  # web service and by the OpenChamber LaunchAgent (modules/openchamber.nix
+  # `opencodePasswordFile`). Content is a shell `export OPENCODE_SERVER_PASSWORD=...`.
+  age.secrets."opencode-server" = {
+    file = ../secrets/opencode-server.age;
+    path = "${config.home.homeDirectory}/.agenix/opencode-server";
+  };
+
   programs.openchamber = {
     enable = true;
     port = 3000;
@@ -333,11 +204,24 @@ in
     host = "0.0.0.0";
     uiPasswordFile = config.age.secrets."openchamber-web".path;
 
+    # Authenticate to the external OpenCode v2 server (OPENCODE_SKIP_START
+    # mode) with the shared server password. Read by the LaunchAgent wrapper,
+    # never written to the store.
+    opencodePasswordFile = config.age.secrets."opencode-server".path;
+
+    # Attach to the OpenCode server programs.opencode already runs on :4096
+    # instead of supervising a second one. Deterministic replacement for the
+    # auto-detect step documented in modules/openchamber.nix.
+    environment.OPENCODE_HOST = "http://localhost:4096";
+    environment.OPENCODE_SKIP_START = "true";
+
+    # Run the separately installed desktop app (Homebrew cask `openchamber`)
+    # as a client of this server instead of as a second embedded server — one
+    # server owns the port and ~/.config/openchamber, the desktop loads its
+    # bundled UI and talks to this API. See ADR-0008.
+    desktopClient.enable = true;
+
     # Headless API-only server (no browser UI assets):
     # apiOnly = true;
-
-    # Attach to an OpenCode server you already run instead of a managed one:
-    # environment.OPENCODE_HOST = "http://localhost:4096";
-    # environment.OPENCODE_SKIP_START = "true";
   };
 }

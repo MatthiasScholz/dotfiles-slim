@@ -10,4 +10,7 @@ let
 in
 {
   "secrets/openchamber-web.age".publicKeys = [ matthias ];
+  # Shared `OPENCODE_SERVER_PASSWORD` for the OpenCode v2 web server and the
+  # OpenChamber server that attaches to it (ADR-0008/ADR-0009).
+  "secrets/opencode-server.age".publicKeys = [ matthias ];
 }

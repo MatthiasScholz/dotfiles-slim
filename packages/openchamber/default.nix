@@ -41,7 +41,7 @@ buildNpmPackage rec {
   # darwin/linux, so `npm rebuild` needs no C/C++ toolchain.
   dontNpmBuild = true;
 
-  npmDepsHash = "sha256-PMhVG0p0kN3yf8+y0vbeDlaOYxY+w4toJjSp6zYkX1M=";
+  npmDepsHash = "sha256-TnFUkF610ohO7MSDw10fkIh7AVc1BZEfN+GzY3dMPAI=";
 
   # `@openchamber/web` exposes its CLI as `openchamber`. The root package.json we
   # use for dependency resolution has no `bin`, so link the nested binary

@@ -25,6 +25,12 @@ sync-config-openchamber:
 openchamber-password:
 	@agenix -d secrets/openchamber-web.age -i "$(HOME)/.config/sops/age/keys.txt" && echo
 
+# OpenCode v2: print the shared OPENCODE_SERVER_PASSWORD (also used by the
+# OpenChamber server to authenticate to it). The secret is stored as a shell
+# line, so strip the `export ...=` prefix. Pipe to pbcopy to move it elsewhere.
+opencode-password:
+	@agenix -d secrets/opencode-server.age -i "$(HOME)/.config/sops/age/keys.txt" | sed 's/^export OPENCODE_SERVER_PASSWORD=//'
+
 # nix-darwin activation needs root, but plain `sudo` inherits the invoking
 # user's HOME, so Nix warns "$HOME ('/Users/matthias') is not owned by you"
 # and falls back to /var/root. -H (--set-home) points HOME at root up front.
