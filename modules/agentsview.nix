@@ -18,6 +18,9 @@
 let
   cfg = config.programs.agentsview;
 
+  # Shared LaunchAgent plist helper (lib/launchd.nix).
+  launchdLib = import ../lib/launchd.nix { inherit lib pkgs; };
+
   # The upstream release assets follow the Go GOOS_GOARCH naming scheme.
   releaseSystem =
     let
@@ -125,6 +128,15 @@ let
   ];
 
   settingsRendered = filterNulls cfg.settings;
+
+  # The managed LaunchAgent: plist shape from lib/launchd.nix.
+  launchdService = launchdLib.mkServiceConfig {
+    name = "agentsview";
+    command = [ "${lib.getExe cfg.package}" "serve" ];
+    logDir = "${config.home.homeDirectory}/.agentsview";
+    logName = "serve";
+    description = "AgentsView session viewer";
+  };
 in
 {
   options.programs.agentsview = {
@@ -388,15 +400,7 @@ in
     # (supervised daemons ignore the idle timeout) and is restarted on failure.
     launchd.agents.agentsview = lib.mkIf cfg.launchd.enable {
       enable = true;
-      config = {
-        ProgramArguments = [ "${lib.getExe cfg.package}" "serve" ];
-        ServiceDescription = "AgentsView session viewer";
-        RunAtLoad = true;
-        KeepAlive = true;
-        ProcessType = "Background";
-        StandardOutPath = "${config.home.homeDirectory}/.agentsview/serve.log";
-        StandardErrorPath = "${config.home.homeDirectory}/.agentsview/serve.log";
-      };
+      config = launchdService.config;
     };
   };
 }

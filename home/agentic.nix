@@ -12,6 +12,9 @@ let
 
   # Pinned OpenCode plugin versions (refreshed via `make update`)
   pluginVersions = import ../modules/opencode-plugin-versions.nix;
+
+  # Shared LaunchAgent secret-env shim (lib/launchd.nix).
+  launchdLib = import ../lib/launchd.nix { inherit lib pkgs; };
 in
 {
   # https://github.com/nix-community/home-manager/blob/master/modules/programs/mcp.nix
@@ -56,25 +59,20 @@ in
         "--port"
         "4096"
       ];
-      # OpenCode v2 requires a server password. The agenix secret holds
-      # `export OPENCODE_SERVER_PASSWORD=...`. Home Manager's darwin launchd
+      # OpenCode v2 requires a server password. Home Manager's darwin launchd
       # wrapper only `source`s the environment file — it does not wait for
-      # agenix to decrypt it — so on a cold login the server could start
-      # without the password. Point it at a generated shim that waits (bounded)
-      # and then sources the real secret. NOTE darwin-only: on Linux systemd
-      # would try to parse this as a KEY=VALUE EnvironmentFile.
-      environmentFile = pkgs.writeShellScript "opencode-server-env" ''
-        secret="${config.age.secrets."opencode-server".path}"
-        i=0
-        while [ ! -r "$secret" ] && [ "$i" -lt 60 ]; do
-          sleep 1
-          i=$((i + 1))
-        done
-        if [ -r "$secret" ]; then
-          # shellcheck disable=SC1090
-          . "$secret"
-        fi
-      '';
+      # agenix to decrypt it — so point it at a shared shim that waits (bounded)
+      # and then sources the secret (lib/launchd.nix). NOTE darwin-only: on
+      # Linux systemd would parse this as a KEY=VALUE EnvironmentFile.
+      environmentFile = launchdLib.mkSecretEnvFile {
+        name = "opencode-server";
+        secrets = [
+          {
+            kind = "source";
+            file = config.age.secrets."opencode-server".path;
+          }
+        ];
+      };
     };
 
     enableMcpIntegration = true;

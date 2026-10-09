@@ -45,6 +45,9 @@ let
   # Prebuilt npm package, see packages/openchamber/default.nix.
   defaultPackage = pkgs.callPackage ../packages/openchamber { };
 
+  # Shared LaunchAgent plist + agenix secret wrapper (lib/launchd.nix).
+  launchdLib = import ../lib/launchd.nix { inherit lib pkgs; };
+
   # Point OpenChamber at the Nix-managed opencode. This matters for the
   # LaunchAgent, whose PATH is not the login shell's, and keeps the CLI and the
   # service on the same binary.
@@ -80,54 +83,8 @@ let
   ++ lib.optionals cfg.apiOnly [ "--api-only" ]
   ++ cfg.extraArgs;
 
-  # launchd cannot expand files into `EnvironmentVariables`, so when secrets
-  # live in files we wrap the binary and read them at service start. Only the
-  # file paths end up in the Nix store, never the secrets themselves.
-  #
-  # - `uiPasswordFile` sets OPENCHAMBER_UI_PASSWORD (the browser login).
-  # - `opencodePasswordFile` is a shell `export OPENCODE_SERVER_PASSWORD=...`
-  #   line, sourced so OpenChamber can authenticate to an external OpenCode v2
-  #   server in OPENCODE_SKIP_START mode.
-  #
-  # agenix decrypts secrets from its own LaunchAgent at login, so the files can
-  # briefly be missing/dangling; wait (bounded) before starting.
-  launchdExec =
-    if cfg.uiPasswordFile == null && cfg.opencodePasswordFile == null then
-      lib.getExe cfg.package
-    else
-      toString (
-        pkgs.writeShellScript "openchamber-launchd" ''
-          ${lib.optionalString (cfg.uiPasswordFile != null) ''
-            secret="${toString cfg.uiPasswordFile}"
-            i=0
-            while [ ! -r "$secret" ] && [ "$i" -lt 60 ]; do
-              sleep 1
-              i=$((i + 1))
-            done
-            if [ -r "$secret" ]; then
-              OPENCHAMBER_UI_PASSWORD="$(cat "$secret")"
-              export OPENCHAMBER_UI_PASSWORD
-            else
-              echo "openchamber-launchd: $secret not readable after 60s; starting without UI password" >&2
-            fi
-          ''}
-          ${lib.optionalString (cfg.opencodePasswordFile != null) ''
-            opencode_secret="${toString cfg.opencodePasswordFile}"
-            i=0
-            while [ ! -r "$opencode_secret" ] && [ "$i" -lt 60 ]; do
-              sleep 1
-              i=$((i + 1))
-            done
-            if [ -r "$opencode_secret" ]; then
-              # shellcheck disable=SC1090
-              . "$opencode_secret"
-            else
-              echo "openchamber-launchd: $opencode_secret not readable after 60s; external OpenCode auth will fail" >&2
-            fi
-          ''}
-          exec ${lib.getExe cfg.package} "$@"
-        ''
-      );
+  # The managed LaunchAgent (plist + secret wrapper) is built by the shared
+  # helper at the end of this let block; see lib/launchd.nix for the mechanism.
 
   # launchd starts jobs with a minimal environment, unlike a login shell.
   # Include the Home Manager profile and Homebrew so tools OpenChamber shells
@@ -183,6 +140,32 @@ let
   }
   // lib.optionalAttrs cfg.apiOnly { OPENCHAMBER_API_ONLY = "true"; }
   // sessionEnvironment;
+
+  # The managed LaunchAgent: plist shape and the agenix secret wrapper come
+  # from lib/launchd.nix. Only the secret file paths reach the store.
+  # - `uiPasswordFile` sets OPENCHAMBER_UI_PASSWORD (the browser login).
+  # - `opencodePasswordFile` is a shell `export OPENCODE_SERVER_PASSWORD=...`
+  #   line, sourced so OpenChamber can authenticate to an external OpenCode v2
+  #   server in OPENCODE_SKIP_START mode.
+  launchdService = launchdLib.mkServiceConfig {
+    name = "openchamber";
+    command = [ (lib.getExe cfg.package) ] ++ serveArgs;
+    logDir = logDir;
+    logName = "startup";
+    description = "OpenChamber agentic development environment";
+    workingDirectory = config.home.homeDirectory;
+    environment = launchdEnvironment;
+    secrets =
+      lib.optional (cfg.uiPasswordFile != null) {
+        kind = "env";
+        var = "OPENCHAMBER_UI_PASSWORD";
+        file = cfg.uiPasswordFile;
+      }
+      ++ lib.optional (cfg.opencodePasswordFile != null) {
+        kind = "source";
+        file = cfg.opencodePasswordFile;
+      };
+  };
 in
 {
   options.programs.openchamber = {
@@ -392,23 +375,13 @@ in
     # directory exists even on a machine that has never run OpenChamber.
     home.activation.openchamberLogDir = lib.mkIf cfg.launchd.enable (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        run mkdir -p "${logDir}"
+        run ${launchdService.logDirActivation}
       ''
     );
 
     launchd.agents.openchamber = lib.mkIf cfg.launchd.enable {
       enable = true;
-      config = {
-        ProgramArguments = [ launchdExec ] ++ serveArgs;
-        ServiceDescription = "OpenChamber agentic development environment";
-        RunAtLoad = true;
-        KeepAlive = true;
-        ProcessType = "Background";
-        WorkingDirectory = config.home.homeDirectory;
-        EnvironmentVariables = launchdEnvironment;
-        StandardOutPath = "${logDir}/startup.log";
-        StandardErrorPath = "${logDir}/startup.err.log";
-      };
+      config = launchdService.config;
     };
   };
 }
