@@ -19,7 +19,7 @@ spawn kanata itself, so it runs the **lifecycle shim**
 (`/usr/local/bin/kanata-tray-shim`) which starts/stops the daemon through the
 privileged helper (`/usr/local/libexec/kanata-manage`, narrow NOPASSWD
 sudoers rule) and mirrors daemon liveness by polling TCP 5829. The activation
-script in `darwin/darwin.nix` reconciles all of it on every switch.
+script in `darwin/kanata.nix` reconciles all of it on every switch.
 
 **The binary is copied to a stable path and re-signed with a stable
 identity.** macOS TCC resolves symlinks and pins an ad-hoc binary's grant to

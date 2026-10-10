@@ -2,7 +2,7 @@
 # The tray is hardcoded to spawn and OWN the "kanata" process it starts
 # (see https://github.com/rszyma/kanata-tray docs/hooks.md). Since kanata
 # itself must run as a root LaunchDaemon (Karabiner vHID socket is
-# root-only; see darwin.nix), the preset manages a lifecycle shim instead
+# root-only; see darwin/kanata.nix), the preset manages a lifecycle shim instead
 # of kanata directly:
 #   - kanata_executable points at a shim (/usr/local/bin/kanata-tray-shim)
 #     that starts the root daemon via a narrow privileged helper and exits
@@ -19,7 +19,7 @@ defaults.tcp_port = 5829
 [presets.'Default Preset']
 kanata_executable = '/usr/local/bin/kanata-tray-shim'
 kanata_config = '/Users/matthias/Library/Application Support/kanata/kanata.kbd'
-# TCP port must match launchd.daemons.kanata in darwin.nix.
+# TCP port must match launchd.daemons.kanata in darwin/kanata.nix.
 tcp_port = 5829
 # Start managing the daemon automatically when the tray launches.
 autorun = true

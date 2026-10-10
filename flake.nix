@@ -122,7 +122,7 @@
               nix.registry.nixpkgs.flake = pkgsInput;
             }
 
-            ./darwin/darwin.nix
+            ./darwin
 
             {
               system.stateVersion = stateVersion;

@@ -23,7 +23,7 @@
 # `make sync-config-openchamber` does (same git-review flow as ADR-0003).
 #
 # `desktopClient` configures the *separately installed* desktop app (Homebrew
-# cask `openchamber`, see darwin/darwin.nix) to attach to this server instead of
+# cask `openchamber`, see darwin/homebrew.nix) to attach to this server instead of
 # starting its own embedded one. It exports OPENCHAMBER_SKIP_LOCAL_SERVER and
 # OPENCHAMBER_SERVER_URL as session variables, which the desktop app picks up
 # through its login-shell probe. The app itself is not installed here — see
