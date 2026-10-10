@@ -7,10 +7,10 @@
 # npm package (see packages/openchamber/default.nix).
 #
 # OpenChamber drives an OpenCode server: by default it starts and supervises its
-# own, but it can also attach to one you already run by setting
-# `environment.OPENCODE_HOST = "http://localhost:4096"` and
-# `environment.OPENCODE_SKIP_START = "true"` (see
-# https://docs.openchamber.dev/opencode-server/).
+# own, but `attach` makes it use one you already run. The module owns the whole
+# contract — `OPENCODE_HOST` / `OPENCODE_SKIP_START`, the LaunchAgent-side secret
+# and the OpenCode-side wait shim — see
+# https://docs.openchamber.dev/opencode-server/.
 #
 # `launchd.enable` replaces `openchamber startup enable`: upstream writes a
 # LaunchAgent and snapshots the current shell environment into it, which is not
@@ -29,9 +29,10 @@
 # through its login-shell probe. The app itself is not installed here — see
 # docs/adr/0008-openchamber-desktop-client.md.
 #
-# `opencodePasswordFile` supplies OPENCODE_SERVER_PASSWORD to the LaunchAgent so
-# it can authenticate to an external OpenCode v2 server in OPENCODE_SKIP_START
-# mode — see docs/adr/0009-opencode-v2-from-npm.md.
+# `attach` owns the whole OpenChamber → OpenCode contract: it sets the env vars,
+# supplies OPENCODE_SERVER_PASSWORD to the LaunchAgent, and installs the
+# OpenCode-side `environmentFile` wait shim, both sourcing `serverPasswordFile`
+# — see docs/adr/0009-opencode-v2-from-npm.md.
 {
   config,
   lib,
@@ -106,12 +107,21 @@ let
   # Same location upstream uses for its self-installed LaunchAgent.
   logDir = "${config.home.homeDirectory}/Library/Logs/OpenChamber";
 
+  # The attach contract owns OPENCODE_HOST / OPENCODE_SKIP_START (see the
+  # assertion below); `attach` is merged after `environment` so the module is
+  # authoritative if a caller leaves stale values there.
+  attachEnvironment = lib.optionalAttrs cfg.attach.enable {
+    OPENCODE_HOST = cfg.attach.host;
+    OPENCODE_SKIP_START = "true";
+  };
+
   sessionEnvironment = {
     OPENCHAMBER_PORT = toString cfg.port;
   }
   // lib.optionalAttrs (cfg.dataDir != null) { OPENCHAMBER_DATA_DIR = toString cfg.dataDir; }
   // opencodeBinary
-  // cfg.environment;
+  // cfg.environment
+  // attachEnvironment;
 
   # URL the separately installed desktop app attaches to (ADR-0008). The server
   # binds `host` (often a wildcard such as 0.0.0.0), but a client on the same
@@ -144,9 +154,9 @@ let
   # The managed LaunchAgent: plist shape and the agenix secret wrapper come
   # from lib/launchd.nix. Only the secret file paths reach the store.
   # - `uiPasswordFile` sets OPENCHAMBER_UI_PASSWORD (the browser login).
-  # - `opencodePasswordFile` is a shell `export OPENCODE_SERVER_PASSWORD=...`
-  #   line, sourced so OpenChamber can authenticate to an external OpenCode v2
-  #   server in OPENCODE_SKIP_START mode.
+  # - `attach.serverPasswordFile` is a shell `export OPENCODE_SERVER_PASSWORD=...`
+  #   line, sourced so OpenChamber can authenticate to the external OpenCode v2
+  #   server it attaches to.
   launchdService = launchdLib.mkServiceConfig {
     name = "openchamber";
     command = [ (lib.getExe cfg.package) ] ++ serveArgs;
@@ -161,9 +171,9 @@ let
         var = "OPENCHAMBER_UI_PASSWORD";
         file = cfg.uiPasswordFile;
       }
-      ++ lib.optional (cfg.opencodePasswordFile != null) {
+      ++ lib.optional (cfg.attach.enable && cfg.attach.serverPasswordFile != null) {
         kind = "source";
-        file = cfg.opencodePasswordFile;
+        file = cfg.attach.serverPasswordFile;
       };
   };
 in
@@ -219,18 +229,43 @@ in
       '';
     };
 
-    opencodePasswordFile = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
-      default = null;
-      example = lib.literalExpression "config.age.secrets.opencode-server.path";
-      description = ''
-        File with an `export OPENCODE_SERVER_PASSWORD=...` line for the external
-        OpenCode v2 server this module attaches to via `OPENCODE_HOST`. The
-        LaunchAgent wrapper sources it, so only the file path reaches the store
-        — never the secret. Only meaningful in `OPENCODE_SKIP_START` mode; when
-        OpenChamber manages OpenCode it generates and keeps its own password.
+    attach = {
+      enable = lib.mkEnableOption ''
+        Attaching this server to an external OpenCode v2 server instead of
+        supervising its own. When enabled the module owns the whole attach
+        contract: it sets OPENCODE_HOST / OPENCODE_SKIP_START and both sides of
+        the shared `serverPasswordFile` wiring (the LaunchAgent wrapper that
+        sources it and, when `programs.opencode.web` is enabled here, the
+        OpenCode-side `environmentFile` wait shim).
+        NOTE this is distinct from `desktopClient`, which attaches the
+        separately installed desktop app to *this* server (ADR-0008).
         See docs/adr/0009-opencode-v2-from-npm.md.
       '';
+
+      host = lib.mkOption {
+        type = lib.types.str;
+        default = "http://localhost:4096";
+        example = "http://127.0.0.1:4096";
+        description = ''
+          URL of the external OpenCode server. Written to `OPENCODE_HOST`;
+          `OPENCODE_SKIP_START` is set to `"true"` alongside it.
+        '';
+      };
+
+      serverPasswordFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = null;
+        example = lib.literalExpression ''config.age.secrets."opencode-server".path'';
+        description = ''
+          File with an `export OPENCODE_SERVER_PASSWORD=...` line for the
+          external OpenCode v2 server. The LaunchAgent wrapper sources it, and
+          the OpenCode-side `environmentFile` shim does too, so only the file
+          path reaches the store — never the secret. Leave null only if the
+          external server needs no password; when OpenChamber manages OpenCode
+          it generates and keeps its own password.
+          See docs/adr/0009-opencode-v2-from-npm.md.
+        '';
+      };
     };
 
     dataDir = lib.mkOption {
@@ -271,13 +306,13 @@ in
       type = lib.types.attrsOf lib.types.str;
       default = { };
       example = {
-        OPENCODE_HOST = "http://localhost:4096";
-        OPENCODE_SKIP_START = "true";
+        OPENCHAMBER_ALLOW_UNAUTHENTICATED_LAN = "true";
       };
       description = ''
-        Environment variables for the session and the LaunchAgent. This is the
-        declarative replacement for the environment snapshot `openchamber
-        startup enable` would have taken.
+        Extra environment variables for the session and the LaunchAgent. This
+        is the declarative replacement for the environment snapshot
+        `openchamber startup enable` would have taken. The attach variables
+        (`OPENCODE_HOST`, `OPENCODE_SKIP_START`) belong to `attach`, not here.
         NOTE values are written to the Nix store/world-readable files; use
         `uiPasswordFile` for secrets.
       '';
@@ -346,9 +381,39 @@ in
           leave the file daemon-managed.
         '';
       }
+      {
+        assertion =
+          !cfg.attach.enable
+          || (!(cfg.environment ? OPENCODE_HOST) && !(cfg.environment ? OPENCODE_SKIP_START));
+        message = ''
+          openchamber: OPENCODE_HOST and OPENCODE_SKIP_START are owned by
+          programs.openchamber.attach; remove them from `environment`.
+        '';
+      }
     ];
 
     home.packages = [ cfg.package ];
+
+    # OpenCode-side half of the attach contract. OpenCode v2 requires the shared
+    # server password too, and Home Manager's darwin launchd wrapper only
+    # `source`s `environmentFile` — it does not wait for agenix — so the module
+    # installs the same bounded-wait shim here. Guarded so that attaching to an
+    # OpenCode this flake does not manage (or one without a password) is fine.
+    programs.opencode.web.environmentFile = lib.mkIf (
+      cfg.attach.enable
+      && cfg.attach.serverPasswordFile != null
+      && (config.programs.opencode.web.enable or false)
+    ) (
+      launchdLib.mkSecretEnvFile {
+        name = "opencode-server";
+        secrets = [
+          {
+            kind = "source";
+            file = cfg.attach.serverPasswordFile;
+          }
+        ];
+      }
+    );
 
     # OpenChamber writes preferences.json itself at runtime (tmp + rename, so
     # it replaces whatever symlink Home Manager installed). Copy those changes

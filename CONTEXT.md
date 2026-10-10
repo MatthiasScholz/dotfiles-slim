@@ -40,6 +40,16 @@ service at start. Only the *path* enters the Nix store; the value never does
 agenix decrypts from its own LaunchAgent at login, so a managed service waits
 (bounded) for the file before starting.
 
+### OpenCode attach
+
+The contract by which an OpenChamber server drives an *external* OpenCode
+server instead of supervising its own: `OPENCODE_HOST` + `OPENCODE_SKIP_START`
+plus the shared server password. `programs.openchamber.attach` owns both sides —
+the LaunchAgent wrapper that sources the password and the OpenCode-side
+`environmentFile` wait shim — so the caller sets one option. Distinct from
+`desktopClient` (ADR-0008), which attaches the desktop app to the OpenChamber
+server. See ADR-0009.
+
 ### config sync-back
 
 The review loop for a file a tool rewrites at runtime: copy the live file over

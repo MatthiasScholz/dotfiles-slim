@@ -12,9 +12,6 @@ let
 
   # Pinned OpenCode plugin versions (refreshed via `make update`)
   pluginVersions = import ../modules/opencode-plugin-versions.nix;
-
-  # Shared LaunchAgent secret-env shim (lib/launchd.nix).
-  launchdLib = import ../lib/launchd.nix { inherit lib pkgs; };
 in
 {
   # https://github.com/nix-community/home-manager/blob/master/modules/programs/mcp.nix
@@ -59,20 +56,11 @@ in
         "--port"
         "4096"
       ];
-      # OpenCode v2 requires a server password. Home Manager's darwin launchd
-      # wrapper only `source`s the environment file — it does not wait for
-      # agenix to decrypt it — so point it at a shared shim that waits (bounded)
-      # and then sources the secret (lib/launchd.nix). NOTE darwin-only: on
-      # Linux systemd would parse this as a KEY=VALUE EnvironmentFile.
-      environmentFile = launchdLib.mkSecretEnvFile {
-        name = "opencode-server";
-        secrets = [
-          {
-            kind = "source";
-            file = config.age.secrets."opencode-server".path;
-          }
-        ];
-      };
+      # OpenCode v2 requires a server password. The agenix-backed
+      # `environmentFile` wait shim is owned by programs.openchamber.attach
+      # below, so that both halves of the attach contract live with the module
+      # (lib/launchd.nix). NOTE darwin-only: on Linux systemd would parse this
+      # as a KEY=VALUE EnvironmentFile.
     };
 
     enableMcpIntegration = true;
@@ -189,7 +177,7 @@ in
 
   # Shared OpenCode v2 server password (see ADR-0009): read by the OpenCode
   # web service and by the OpenChamber LaunchAgent (modules/openchamber.nix
-  # `opencodePasswordFile`). Content is a shell `export OPENCODE_SERVER_PASSWORD=...`.
+  # `attach.serverPasswordFile`). Content is a shell `export OPENCODE_SERVER_PASSWORD=...`.
   age.secrets."opencode-server" = {
     file = ../secrets/opencode-server.age;
     path = "${config.home.homeDirectory}/.agenix/opencode-server";
@@ -202,16 +190,17 @@ in
     host = "0.0.0.0";
     uiPasswordFile = config.age.secrets."openchamber-web".path;
 
-    # Authenticate to the external OpenCode v2 server (OPENCODE_SKIP_START
-    # mode) with the shared server password. Read by the LaunchAgent wrapper,
-    # never written to the store.
-    opencodePasswordFile = config.age.secrets."opencode-server".path;
-
     # Attach to the OpenCode server programs.opencode already runs on :4096
-    # instead of supervising a second one. Deterministic replacement for the
-    # auto-detect step documented in modules/openchamber.nix.
-    environment.OPENCODE_HOST = "http://localhost:4096";
-    environment.OPENCODE_SKIP_START = "true";
+    # instead of supervising a second one, authenticating with the shared
+    # server password. The module owns both sides of the contract: the
+    # LaunchAgent wrapper that sources `serverPasswordFile` and the
+    # OpenCode-side `environmentFile` wait shim (ADR-0009). Deterministic
+    # replacement for the auto-detect step documented in modules/openchamber.nix.
+    attach = {
+      enable = true;
+      host = "http://localhost:4096";
+      serverPasswordFile = config.age.secrets."opencode-server".path;
+    };
 
     # Run the separately installed desktop app (Homebrew cask `openchamber`)
     # as a client of this server instead of as a second embedded server — one
