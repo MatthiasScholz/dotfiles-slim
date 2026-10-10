@@ -13,54 +13,29 @@
 
 set -euo pipefail
 
-repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-src="${AGENTSVIEW_CONFIG:-$HOME/.agentsview/config.toml}"
-dst="$repo_dir/config/agentsview/config.toml"
+# shellcheck source=SCRIPTDIR/lib/sync-config.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/sync-config.sh"
 
 # Keys that must never be copied into version control.
 # daemon-generated / secret-bearing top-level keys of config.toml
 secret_keys='^(auth_token|cursor_secret|github_token|cursor_admin_api_key) = '
 
-if [[ ! -f "$src" ]]; then
-  echo "error: $src not found — run agentsview once so it creates a config file" >&2
-  exit 1
-fi
+# Self-explanatory header (prepended after the secret strip on every sync)
+header="$(cat <<'EOF'
+# AgentsView configuration - version-controlled copy.
+# Source of truth synced from ~/.agentsview/config.toml via
+# 'make sync-config-agentsview' (docs/adr/0003-agentsview-config-sync-back.md).
+# Secret keys (auth_token, cursor_secret, ...) are intentionally omitted;
+# the daemon regenerates them at runtime. Secrets belong in agenix (ADR-0004).
+EOF
+)"
 
-existed=false
-[[ -f "$dst" ]] && existed=true
-
-mkdir -p "$(dirname "$dst")"
-# Copy everything except secret keys (basic top-level strip for now;
-# agenix migration per ADR-0003/0004 is the long-term home for these)
-sed -E "/${secret_keys}/d" "$src" > "$dst"
-
-# Self-explanatory header (regenerated on every sync)
-{
-  printf '# AgentsView configuration - version-controlled copy.\n'
-  printf '# Source of truth synced from ~/.agentsview/config.toml via\n'
-  printf "# 'make sync-config-agentsview' (docs/adr/0003-agentsview-config-sync-back.md).\n"
-  printf '# Secret keys (auth_token, cursor_secret, ...) are intentionally omitted;\n'
-  printf '# the daemon regenerates them at runtime. Secrets belong in agenix (ADR-0004).\n'
-  cat "$dst"
-} > "${dst}.tmp" && mv "${dst}.tmp" "$dst"
-
-# Make the file visible to the flake (and to the diff below) on first sync
-$existed || git -C "$repo_dir" add -N "$dst"
-
-echo "Copied $src -> config/agentsview/config.toml (secret keys stripped)"
-echo
-
-# Report what was stripped so it is visible
-if grep -qE "${secret_keys}" "$src"; then
-  echo "Stripped secret keys (not copied into version control):"
-  grep -oE "${secret_keys}" "$src" | sed 's/ =.*//' | sed 's/^/  - /'
-  echo "  (the daemon regenerates them when missing; agenix migration: ADR-0003/0004)"
-  echo
-fi
-
-echo
-echo "Review the diff below."
-echo "  approve: git add config/agentsview/config.toml && git commit"
-echo "  reject:  git checkout -- config/agentsview/config.toml"
-echo
-git -C "$repo_dir" --no-pager diff -- config/agentsview/config.toml
+sync_config \
+  --src "${AGENTSVIEW_CONFIG:-$HOME/.agentsview/config.toml}" \
+  --dst config/agentsview/config.toml \
+  --missing-hint "run agentsview once so it creates a config file" \
+  --secret-policy strip \
+  --secret-pattern "$secret_keys" \
+  --header "$header" \
+  --add-n if-missing \
+  --diff-mode worktree

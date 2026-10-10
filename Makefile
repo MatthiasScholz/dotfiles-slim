@@ -1,6 +1,10 @@
 check:
 	nix flake check
 
+# Regression tests for the shell sync-config flow (no Nix involved).
+test:
+	./scripts/tests/sync-config.sh
+
 info:
 	nix flake info
 	nix flake show
