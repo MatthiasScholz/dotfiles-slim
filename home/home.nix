@@ -31,7 +31,7 @@
     ./p1.nix
     ./p2.nix
     ./tinker.nix
-    ./agentic.nix
+    ./agentic
   ];
 
   # Disable the Home Manager manual/manpage generation. This prevents
