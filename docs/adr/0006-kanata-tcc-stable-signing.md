@@ -46,7 +46,7 @@ the copy is kept both **fresh** and **matched to a stable TCC requirement**.
 **Option A — keep a stable-path copy, and give it a stable, content-independent
 code signature.**
 
-The activation script in `darwin/darwin.nix`:
+The activation script in `darwin/kanata.nix`:
 
 1. **Creates a machine-local self-signed code-signing identity once**
    (`kanata-tcc`) in the root-only System keychain, guarded by
@@ -115,7 +115,7 @@ loaded on the same switch.
 ## References
 
 - kanata macOS setup: <https://github.com/jtroo/kanata/blob/main/docs/setup-macos.md>
-- Implementation: `darwin/darwin.nix` (`system.activationScripts.extraActivation.text`),
+- Implementation: `darwin/kanata.nix` (`system.activationScripts.extraActivation.text`),
   operator runbook: [`docs/troubleshooting.md`](../troubleshooting.md)
 - ADR-0002 — root daemon, tray shim/helper, the original stable-copy rationale
 - Evidence: tccd `Failed to match existing code requirement`; `TCC.db`

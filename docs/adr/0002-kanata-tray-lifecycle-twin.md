@@ -48,7 +48,7 @@ cannot open the root-only vHID socket — the core conflict.
 ## Decision
 
 Split the process into three cooperating parts, all reconciled by
-`darwin/darwin.nix` on every activation:
+`darwin/kanata.nix` on every activation:
 
 1. **Root LaunchDaemon `com.kanata`** (`launchd.daemons.kanata`) — the real
    kanata remapping process, using a stable binary copy and delegated to the
@@ -123,7 +123,7 @@ flowchart TB
     TRAY -- "post-stop hook" --> HELPER
     HELPER -- stop --> KANATA
 
-    ACT["nix-darwin activation script<br/>(darwin/darwin.nix)<br/>writes binary copy, shim, helper, sudoers, toml, config; kickstarts tray"]
+    ACT["nix-darwin activation script<br/>(darwin/kanata.nix)<br/>writes binary copy, shim, helper, sudoers, toml, config; kickstarts tray"]
     ACT -.reconciles on every switch.-> system
     ACT -.-> SHIM
     ACT -.-> HELPER
@@ -190,7 +190,7 @@ SIP-read-only and `tccutil` cannot target a path-based client.
 - kanata macOS setup guide: <https://github.com/jtroo/kanata/blob/main/docs/setup-macos.md>
 - kanata-tray (runner owns the child process): <https://github.com/rszyma/kanata-tray>
 - Karabiner-DriverKit-VirtualHIDDevice (root-only IPC socket): <https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice>
-- Implementation: `darwin/darwin.nix` (activation script, `launchd.daemons.kanata`,
+- Implementation: `darwin/kanata.nix` (activation script, `launchd.daemons.kanata`,
   `launchd.user.agents.kanata-tray`), `config/kanata/kanata-tray.toml`
 - ADR-0006 — stable code-signed kanata copy (supersedes this ADR's binary
   installation detail)

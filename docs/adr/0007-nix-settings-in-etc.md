@@ -64,13 +64,13 @@ Two facts shape the layout:
   (`environment.etc."nix/nix.custom.conf".text`, a `types.lines` option, so
   the two definitions concatenate).
 - **`nix.enable = false`.** The Nix installation is managed by the
-  Determinate installer, not nix-darwin (`darwin/darwin.nix`). nix-darwin's
+  Determinate installer, not nix-darwin (`darwin/nix.nix`). nix-darwin's
   `nix.settings`/`nix.gc`/`nix.optimise` modules are built around
   `nix.enable = true`, so they are not the mechanism here; the repo writes
   `nix.custom.conf` directly through `environment.etc`.
 
 The same reasoning already applies to the remote builders in
-`darwin/darwin.nix`: *"root does not read the user's `~/.ssh/config`"*, so the
+`darwin/remote-builders.nix`: *"root does not read the user's `~/.ssh/config`"*, so the
 SSH aliases are installed system-wide. ADR-0007 generalises that principle to
 Nix settings.
 
@@ -82,7 +82,7 @@ settings.**
 
 1. `/etc/nix/nix.conf` is treated as read-only (Determinate-owned). All
    repo-managed settings go through `environment.etc."nix/nix.custom.conf"`
-   in `darwin/darwin.nix`, which Determinate includes.
+   in `darwin/nix.nix`, which Determinate includes.
 2. Anything a `make switch` / `make setup` (root), the daemon, or a remote
    builder must see — substituters, trusted keys, trusted users, `eval-cores`,
    builder aliases — is declared in `nix.custom.conf` (or `/etc/nix/machines`,
@@ -136,7 +136,7 @@ settings.**
 - **Stale documentation.** `README.md` still tells the reader to add binary
   caches by editing `/private/etc/nix/nix.custom.conf` by hand. That file is a
   symlink into `/etc/static`, so hand edits are transient; the README must
-  point at `darwin/darwin.nix` instead. (Follow-up, not blocking.)
+  point at `darwin/nix.nix` instead. (Follow-up, not blocking.)
 - **Determinate changes the seam.** If a future Determinate release stops
   including `nix.custom.conf`, settings silently stop applying; caught by a
   periodic `nix config show` / cache-hit sanity check.
@@ -147,7 +147,7 @@ settings.**
 |---|---|
 | Plain `sudo nix …` (no `-H`), tolerate the warning | The effective uid is root but `HOME` is the operator's: Nix warns, and any evaluation that consults `$HOME`-relative state uses the wrong home. `-H` is the correct invocation, so adopt it rather than paper over the log line |
 | Keep all settings in `~/.config/nix/nix.conf` | The daemon/root never reads it. System substituters, trusted keys and builders would not apply to root builds, which is where nix-darwin activation runs |
-| Use nix-darwin `nix.settings` | Requires `nix.enable = true` and nix-darwin owning the install; conflicts with the Determinate-managed `nix.conf` (ADR rationale in `darwin/darwin.nix`) |
+| Use nix-darwin `nix.settings` | Requires `nix.enable = true` and nix-darwin owning the install; conflicts with the Determinate-managed `nix.conf` (ADR rationale in `darwin/nix.nix`) |
 | Edit `/etc/nix/nix.conf` directly | Header says *"do not modify! this file will be replaced!"*; changes are lost on the next Determinate upgrade |
 | Rely on `NIX_CONFIG` / `NIX_USER_CONF_FILES` in the Makefile | Per-invocation and invisible to the daemon; hides system policy in a shell wrapper instead of in reviewed Nix |
 
@@ -157,8 +157,8 @@ settings.**
   <https://nix.dev/manual/nix/latest/command-ref/conf-file>
 - Determinate Systems installer / Determinate Nix:
   <https://github.com/DeterminateSystems/nix-installer>
-- `darwin/darwin.nix` — `environment.etc."nix/nix.custom.conf"`,
-  `nix/machines`, `ssh/ssh_config.d/remote-builders.conf`
+- `darwin/nix.nix` — `environment.etc."nix/nix.custom.conf"`;
+  `darwin/remote-builders.nix` — `nix/machines`, `ssh/ssh_config.d/remote-builders.conf`
 - `Makefile` — `SUDO ?= sudo -H`, `switch`, `setup`
 - `README.md` — *Binary Caches*, *Github Access* (token in
   `~/.config/nix/nix.conf`)

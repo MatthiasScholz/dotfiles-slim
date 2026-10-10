@@ -66,7 +66,7 @@ VS Code, iOS, Android").
 run it as a client of the module's LaunchAgent server.**
 
 1. **Cask, not packaging.** Add `"openchamber"` to the `casks` list in
-   `darwin/darwin.nix`. ADR-0005's rejection of the cask is superseded *for
+   `darwin/homebrew.nix`. ADR-0005's rejection of the cask is superseded *for
    this use case*: code signing, notarization and the Electron self-updater stay
    upstream, in exchange for the desktop binary **not** being flake-reproducible
    (Homebrew owns the version, `auto_updates: true` means it drifts).
@@ -88,7 +88,7 @@ run it as a client of the module's LaunchAgent server.**
    must share a version: the desktop is a client of the server. The cask version
    is owned by the pinned `homebrew-cask` flake input (advanced by
    `make update`); the server version by
-   `packages/openchamber/package-lock.json`. `darwin/darwin.nix` reads both and
+   `packages/openchamber/package-lock.json`. `darwin/openchamber.nix` reads both and
    emits a warning when they differ, so the two are bumped together rather than
    silently drifting. Today both are `2.2.0`.
 
@@ -113,7 +113,7 @@ run it as a client of the module's LaunchAgent server.**
   Homebrew resolves; `auto_updates: true` means it can change without a commit.
   This is inherent to the cask and is the price of not packaging Electron.
 - **Two version sources.** The cask version comes from the `homebrew-cask`
-  flake input, the server version from the npm lockfile. `darwin/darwin.nix`
+  flake input, the server version from the npm lockfile. `darwin/openchamber.nix`
   warns on drift, but nothing forces the two bumps into one commit — a
   `make update` that advances the tap past the packaged server is a warning, not
   an error.
@@ -169,7 +169,7 @@ run it as a client of the module's LaunchAgent server.**
 - OpenChamber: <https://github.com/openchamber/openchamber>,
   <https://openchamber.dev>
 - Module: `modules/openchamber.nix`; enablement: `home/agentic.nix`; cask:
-  `darwin/darwin.nix` (version-sync warning); server package:
+  `darwin/openchamber.nix` (version-sync warning); server package:
   `packages/openchamber/`; cask tap input: `homebrew-cask` in `flake.nix`;
   shared OpenCode password: `secrets/opencode-server.age` +
   `programs.openchamber.opencodePasswordFile`
