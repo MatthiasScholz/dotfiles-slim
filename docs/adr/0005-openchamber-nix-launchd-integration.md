@@ -5,7 +5,7 @@
 - **Deciders**: Matthias (config owner), coding agent
 - **Related**: ADR-0001 (installer → declarative module), ADR-0002 (state must
   live in the flake, not in tool-managed side channels), ADR-0004 (secrets via
-  agenix)
+  agenix), ADR-0011 (the attach contract, now module-owned)
 
 ## Context
 
@@ -133,7 +133,8 @@ Device-scoped keys never reach either file, so no per-device state is captured.
 | `programs.openchamber.apiOnly` | `false` | headless (`--api-only`) for desktop/mobile clients |
 | `programs.openchamber.uiPasswordFile` | `null` | password file read by the LaunchAgent |
 | `programs.openchamber.dataDir` | `null` (`~/.config/openchamber`) | state directory |
-| `programs.openchamber.environment` | `{}` | env for session + service; also how `OPENCODE_HOST` / `OPENCODE_SKIP_START` are set |
+| `programs.openchamber.environment` | `{}` | extra env for session + service (the attach vars belong to `attach`) |
+| `programs.openchamber.attach` | disabled | attach to an external OpenCode: `enable`, `host`, `serverPasswordFile` (ADR-0011) |
 | `programs.openchamber.extraArgs` | `[]` | extra `serve` arguments |
 | `programs.openchamber.launchd.enable` | `false` | install + load the LaunchAgent |
 
@@ -148,9 +149,9 @@ supervise its own. This repo already installs OpenCode declaratively
   (the CLI reads `OPENCODE_BINARY` first; `OPENCODE_PATH` /
   `OPENCHAMBER_OPENCODE_BIN` are accepted fallbacks) — essential, because the
   LaunchAgent's `PATH` is not the login shell's;
-- makes switching to an externally-run OpenCode a two-line config change
-  (`environment.OPENCODE_HOST`, `environment.OPENCODE_SKIP_START`), which is
-  upstream's documented flow.
+- makes switching to an externally-run OpenCode a one-option config change
+  (`attach`), which is upstream's documented flow; the module owns both sides
+  of the shared password (ADR-0011).
 
 ## Architecture (files touched)
 

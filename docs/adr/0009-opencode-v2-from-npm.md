@@ -6,7 +6,8 @@
 - **Related**: ADR-0005 (packaged `@openchamber/web` from npm for the same
   reason), ADR-0008 (desktop app is a client of the module server, which talks
   to this OpenCode), ADR-0001 (imperative installers are converted, not
-  executed)
+  executed), ADR-0011 (the attach contract owns the OpenCode-side password
+  shim)
 
 ## Context
 
@@ -61,10 +62,11 @@ derivation and make it the OpenCode used by `programs.opencode`.**
    `programs.opencode.web` service gets `OPENCODE_SERVER_PASSWORD` from
    `secrets/opencode-server.age` through Home Manager's `web.environmentFile`
    (sourced by the launchd wrapper), and the OpenChamber server reads the same
-   secret through the new `programs.openchamber.opencodePasswordFile`, so its
+   secret through `programs.openchamber.attach.serverPasswordFile`, so its
    external compatibility probe (`readExternalOpenCodeVersion` → `GET /api/info`
    with `Authorization: Basic opencode:<pw>`) authenticates and reads the
-   version.
+   version. The wait shim behind `web.environmentFile` is owned by that attach
+   option, not wired by hand (ADR-0011).
 
 A bump is: set `version`, refresh each hash with
 `nix store prefetch-file --json --hash-type sha256 <url>`.

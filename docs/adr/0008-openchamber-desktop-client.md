@@ -76,11 +76,12 @@ run it as a client of the module's LaunchAgent server.**
    — which the desktop app's login-shell probe inherits, so it loads its bundled
    UI and attaches to the module's server instead of starting its own. They are
    session-only: the LaunchAgent never sees desktop-client flags.
-3. **One OpenCode.** Set `programs.openchamber.environment.OPENCODE_HOST =
-   "http://localhost:4096"` and `OPENCODE_SKIP_START = "true"` in
-   `home/agentic.nix` so the module's server attaches to `programs.opencode.web`
-   deterministically instead of relying on auto-detection (ADR-0005's documented
-   flow). The desktop client then inherits that same agent runtime for free.
+3. **One OpenCode.** Set `programs.openchamber.attach` (host + shared
+   `serverPasswordFile`) in `home/agentic.nix` so the module's server attaches
+   to `programs.opencode.web` deterministically instead of relying on
+   auto-detection (ADR-0005's documented flow). The module owns the whole
+   attach contract, including the OpenCode-side password shim (ADR-0011). The
+   desktop client then inherits that same agent runtime for free.
 4. **Opt-out is explicit.** Setting `desktopClient.enable = false` (or removing
    the cask) returns the desktop to its embedded server on 57123; that mode
    still works but is the fallback described above.
@@ -172,5 +173,6 @@ run it as a client of the module's LaunchAgent server.**
   `darwin/openchamber.nix` (version-sync warning); server package:
   `packages/openchamber/`; cask tap input: `homebrew-cask` in `flake.nix`;
   shared OpenCode password: `secrets/opencode-server.age` +
-  `programs.openchamber.opencodePasswordFile`
-- Related: ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0009
+  `programs.openchamber.attach.serverPasswordFile`
+- Related: ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0009,
+  ADR-0011
