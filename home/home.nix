@@ -9,7 +9,7 @@
 {
   imports = [
     ./keyboard.nix
-    ./shell.nix
+    ./shell
     ./wezterm.nix
     ../modules/git-ai.nix
     ../modules/gws.nix
