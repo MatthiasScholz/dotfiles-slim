@@ -1,6 +1,7 @@
 # OpenCode core: the v2 package, its web service (attached to by OpenChamber)
 # and the pinned plugin list.
 {
+  config,
   pkgs,
   ...
 }:
@@ -39,8 +40,25 @@ in
 
     enableMcpIntegration = true;
 
+    # The Grafana MCP vhost is HTTPS with Caddy's internal CA, which is not in
+    # Node's trust store. The daemon is launchd-managed, so a shell export would
+    # not reach it; give the agent the path (a path, not a secret).
+    # See homeserver-nix docs/how-to/operate-grafana-mcp.md.
+
     settings = {
       autoupdate = false;
+      # Grafana MCP on the homeserver (ADR 041 there). Declared here rather than
+      # in programs.mcp because OpenCode settings win wholesale per server and
+      # `oauth` is not in the MCP transform's whitelist — the entry would lose
+      # either `oauth` or its url/headers. The bearer token is substituted from
+      # a file at request time: not in the Nix store, not in the environment.
+      mcp."grafana homeserver" = {
+        type = "remote";
+        url = "https://grafana-mcp.homeserver.home/mcp";
+        headers.Authorization = "Bearer {file:~/.local/state/grafana-mcp/caller-token}";
+        oauth = false;
+        enabled = true;
+      };
       plugin = [
         # Pinned versions (updated via make update -> scripts/update-opencode-plugin-versions.sh)
         "opencode-gemini-auth@${pluginVersions."opencode-gemini-auth"}"
@@ -55,4 +73,7 @@ in
     };
 
   };
+
+  launchd.agents.opencode-web.config.EnvironmentVariables.NODE_EXTRA_CA_CERTS =
+    "${config.home.homeDirectory}/.config/caddy/caddy-local-root.crt";
 }

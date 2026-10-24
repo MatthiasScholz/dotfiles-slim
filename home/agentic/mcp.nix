@@ -22,7 +22,6 @@
           "mcp"
         ];
       };
-      # TODO add somehow the homeassistant MCP, but not in general availability
     };
   };
 }
