@@ -51,6 +51,13 @@
       serverPasswordFile = config.age.secrets."opencode-server".path;
     };
 
+    # Voice output: allow a remote OpenAI-compatible TTS server. OpenRouter's
+    # `/audio/speech` endpoint lives at https://openrouter.ai/api/v1, and the
+    # server refuses remote custom speech URLs on a CLI-launched instance
+    # unless this flag is set (the desktop-embedded runtime allows them by
+    # default, this one does not). Local-only hosts work without it.
+    environment.OPENCHAMBER_ALLOW_REMOTE_OPENAI_COMPAT_URLS = "true";
+
     # Run the separately installed desktop app (Homebrew cask `openchamber`)
     # as a client of this server instead of as a second embedded server — one
     # server owns the port and ~/.config/openchamber, the desktop loads its
