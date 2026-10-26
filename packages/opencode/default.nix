@@ -18,7 +18,7 @@
 }:
 
 let
-  version = "2.0.26";
+  version = "2.1.4";
 
   # Nix system -> npm platform package suffix. macOS x64 uses the "baseline"
   # build (no AVX2) — the variant upstream's desktop packaging selects.
@@ -34,8 +34,8 @@ let
   # Hashes of the published tarballs (fetchurl, not fetchzip: these are the
   # flat-file hashes of the .tgz, unpacked explicitly below).
   hashes = {
-    darwin-arm64 = "sha256-e03cpeY9OKHSrd02gnCEPCOuugCWE9/Q4zhS05uGEHY=";
-    darwin-x64-baseline = "sha256-59vxoXQtiqMWsLt3vbec+YgLPBGreV1CDAO0Qk4VVvM=";
+    darwin-arm64 = "sha256-2qL+BPJ4hQkNzK7tng1lFLyAp4ScywqdlFIbODhRv6U=";
+    darwin-x64-baseline = "sha256-BvVycFhLY/f+2g9kOUx2BwtYcxhS1CoC4mJHWFVx8gY=";
   };
 in
 stdenv.mkDerivation {

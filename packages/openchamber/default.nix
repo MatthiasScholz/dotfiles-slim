@@ -5,9 +5,9 @@
 # from source. The tarball already contains the compiled frontend (`dist/`) and
 # server (`server/`).
 #
-# To bump: `cd packages/openchamber && npm install @openchamber/web@<version>`,
-# then set `npmDepsHash = lib.fakeHash`, rebuild once and paste the reported
-# `got:` hash back here.
+# To bump: `cd packages/openchamber && npm install --save-exact
+# @openchamber/web@<version>`, then set `npmDepsHash = lib.fakeHash`, rebuild
+# once and paste the reported `got:` hash back here.
 {
   lib,
   buildNpmPackage,
@@ -41,7 +41,7 @@ buildNpmPackage rec {
   # darwin/linux, so `npm rebuild` needs no C/C++ toolchain.
   dontNpmBuild = true;
 
-  npmDepsHash = "sha256-TnFUkF610ohO7MSDw10fkIh7AVc1BZEfN+GzY3dMPAI=";
+  npmDepsHash = "sha256-Bx6CY9NjubiVkBkco5gWw6YijgM3YKP9RvQQdx8PT5Y=";
 
   # `@openchamber/web` exposes its CLI as `openchamber`. The root package.json we
   # use for dependency resolution has no `bin`, so link the nested binary
