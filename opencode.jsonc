@@ -1,12 +1,17 @@
 {
     "$schema": "https://opencode.ai/config.json",
     "mcp": {
-        // https://github.com/utensils/mcp-nixos
+      "servers": {
         "nixos": {
-            "type": "local",
-            "command": [
-                "nix", "run", "github:utensils/mcp-nixos", "--"
-            ]
+          "type": "local",
+          "command": [
+            "uvx",
+            "mcp-nixos"
+          ],
+          "disabled": false
         }
+      }
+        // https://github.com/utensils/mcp-nixos
+        
   }
 }
