@@ -6,11 +6,20 @@
   ...
 }:
 
+let
+  # nixpkgs' vitejs pins pnpm_10 for the build, but lets `fetchPnpmDeps`
+  # default to the top-level `pnpm` (12.x). fetchPnpmDeps refuses
+  # `fetcherVersion = 3` for pnpm >= 11 and throws during evaluation, which
+  # aborts the whole devenv shell. Pass the pinned pnpm through explicitly.
+  vitejs = pkgs.vitejs.override {
+    fetchPnpmDeps = pkgs.fetchPnpmDeps.override { pnpm = pkgs.pnpm_10; };
+  };
+in
 {
   packages = [
     # pi-web installation
     pkgs.typescript
-    pkgs.vitejs
+    vitejs
     # pi-web-access video frame extraction
     pkgs.ffmpeg
     pkgs.yt-dlp
